@@ -51,6 +51,8 @@ type
     byRes: array [0 .. 215] of Byte;
   end;
 
+  DRAWFUN = procedure(lRealHandle: Longint; hDc: IntPtr; dwUser: UINT); stdcall;
+
 function NET_DVR_Login_V30(sDVRIP: PAnsiChar; wDVRPort: Int32;
   sUserName: PAnsiChar; sPassword: PAnsiChar;
   var lpDeviceInfo: NET_DVR_DEVICEINFO_V30): Integer; stdcall;
@@ -63,6 +65,8 @@ function NET_DVR_RealPlay_V40(iUserID: Longint;
   pUser: IntPtr): Integer; stdcall; external 'HCNetSDK.dll';
 function NET_DVR_StopRealPlay(iRealHandle: Longint): Bool; stdcall;
   external 'HCNetSDK.dll';
+function NET_DVR_RigisterDrawFun(lRealHandle: Longint; fDrawFun: DRAWFUN;
+  dwUser: UINT): Bool; stdcall; external 'HCNetSDK.dll';
 
 implementation
 

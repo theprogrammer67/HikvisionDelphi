@@ -108,4 +108,21 @@ object Form1: TForm1
     TabOrder = 7
     Text = '2'
   end
+  object edtText: TEdit
+    Left = 192
+    Top = 445
+    Width = 121
+    Height = 24
+    TabOrder = 8
+    Text = #1058#1080#1087#1072' '#1090#1077#1082#1089#1090
+  end
+  object btnTextOut: TButton
+    Left = 319
+    Top = 445
+    Width = 82
+    Height = 25
+    Caption = 'btnTextOut'
+    TabOrder = 9
+    OnClick = btnTextOutClick
+  end
 end
