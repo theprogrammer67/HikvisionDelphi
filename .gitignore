@@ -1,0 +1,17 @@
+*.local
+*.dcu
+*.res
+%.dres
+*.otares
+*.tvsconfig
+*.identcache
+*.dll
+*.stat
+*.~*
+*._*
+__history/
+__recovery/
+*.bat
+*.exe
+*.dsk
+
