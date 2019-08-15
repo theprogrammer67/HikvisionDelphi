@@ -41,26 +41,18 @@ implementation
 
 procedure DrawFun(lRealHandle: Longint; hDc: IntPtr; dwUser: UINT); stdcall;
 var
-  // LCurHPen: hPen;
   LObj: HGDIOBJ;
   LHFont: HFONT;
 begin
-  // LCurHPen := CreatePen(PS_GEOMETRIC or PS_DASH, 10, RGB(255, 255, 0));
-  // LObj := SelectObject(hDc, LCurHPen);
-  // MoveToEx(hDc, 10, 10, nil);
-  // LineTo(hDc, 100, 200);
-  // DeleteObject(LObj);
-
   if Length(Form1.FText) = 0 then
     Exit;
 
   LHFont := CreateFont(60, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 2, 0,
     'SYSTEM_FIXED_FONT');
   LObj := SelectObject(hDc, LHFont);
-  // SetBkMode(hDC,TRANSPARENT);
-  // DrawText(hDC,"Hello, World!",-1,&rc,DT_SINGLELINE|DT_CENTER|DT_VCENTER);
   SetBkMode(hDc, TRANSPARENT);
   SetTextColor(hDc, RGB(160, 255, 150));
+  // DrawText(hDC,"Hello, World!",-1,&rc,DT_SINGLELINE|DT_CENTER|DT_VCENTER);
   TextOut(hDc, 0, 0, PWideChar(Form1.FText), Length(Form1.FText));
   DeleteObject(SelectObject(hDc, LObj));
 end;
