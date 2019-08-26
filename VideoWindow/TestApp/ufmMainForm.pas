@@ -17,10 +17,15 @@ type
     lbledtPassword: TLabeledEdit;
     lbledtChannel: TLabeledEdit;
     appev1: TApplicationEvents;
+    btnSetOverlayText: TButton;
+    mmoText: TMemo;
+    chkPrintText: TCheckBox;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnPlayStopClick(Sender: TObject);
+    procedure btnSetOverlayTextClick(Sender: TObject);
+    procedure chkPrintTextClick(Sender: TObject);
   private
     FUserID: Integer;
     FVideoWindow: TVideoWindow;
@@ -111,6 +116,17 @@ begin
     Stop
   else
     Play;
+end;
+
+procedure TfrmMainForm.btnSetOverlayTextClick(Sender: TObject);
+begin
+  FVideoWindow.OverlayText := mmoText.Text;
+  FVideoWindow.PrintOverlayText := chkPrintText.Checked;
+end;
+
+procedure TfrmMainForm.chkPrintTextClick(Sender: TObject);
+begin
+  FVideoWindow.PrintOverlayText := chkPrintText.Checked;
 end;
 
 end.

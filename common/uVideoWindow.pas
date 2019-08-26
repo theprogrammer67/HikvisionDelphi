@@ -14,6 +14,7 @@ type
     FFontSize: Integer;
     FFontName: TFontName;
     FFontColor: TColor;
+    FPrintOverlayText: Boolean;
   private
     class var FObjects: TObjectList<TVideoWindow>;
     procedure RegisterObj;
@@ -36,7 +37,6 @@ type
   public
     procedure Play(AUserID: Integer);
     procedure Stop;
-    procedure SetText;
   public
     property Channel: Integer read FChannel write FChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
@@ -44,6 +44,7 @@ type
     property FontName: TFontName read FFontName write FFontName;
     property FontSize: Integer read FFontSize write FFontSize;
     property FontColor: TColor read FFontColor write FFontColor;
+    property PrintOverlayText: Boolean read FPrintOverlayText write FPrintOverlayText;
   end;
 
 implementation
@@ -60,7 +61,7 @@ begin
   Color := clNavy;
 
   FFontName := 'Courier New';
-  FFontSize := 12;
+  FFontSize := 24;
   FFontColor := RGB(160, 255, 150);
 
   RegisterObj;
@@ -97,8 +98,26 @@ begin
 end;
 
 procedure TVideoWindow.DrawFunction(hDc: IntPtr);
+var
+  LObj: HGDIOBJ;
+  LHFont: HFONT;
+  LRect: TRect;
 begin
+  if (not FPrintOverlayText) or (Length(OverlayText) = 0) then
+    Exit;
 
+  LHFont := CreateFont(FFontSize, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
+    PWideChar(FFontName));
+  LObj := SelectObject(hDc, LHFont);
+  try
+    SetBkMode(hDc, TRANSPARENT);
+    SetTextColor(hDc, FFontColor);
+    LRect := Rect(0, 0, Width, Height);
+    DrawText(hDc, PWideChar(OverlayText), Length(OverlayText), LRect,
+      DT_LEFT or DT_TOP);
+  finally
+    DeleteObject(SelectObject(hDc, LObj));
+  end;
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
@@ -154,11 +173,6 @@ end;
 procedure TVideoWindow.RegisterObj;
 begin
   FObjects.Add(Self);
-end;
-
-procedure TVideoWindow.SetText;
-begin
-
 end;
 
 procedure TVideoWindow.Stop;
