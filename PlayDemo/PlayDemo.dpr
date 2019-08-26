@@ -3,7 +3,7 @@
 uses
   Vcl.Forms,
   ufmMainForm in 'ufmMainForm.pas' {Form1},
-  uCHCNetSDK in 'uCHCNetSDK.pas';
+  uCHCNetSDK in '..\common\uCHCNetSDK.pas';
 
 {$R *.res}
 
