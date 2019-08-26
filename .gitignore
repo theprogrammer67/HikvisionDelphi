@@ -14,4 +14,4 @@ __recovery/
 *.bat
 *.exe
 *.dsk
-
+bin/
