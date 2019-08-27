@@ -20,12 +20,14 @@ type
     btnSetOverlayText: TButton;
     mmoText: TMemo;
     chkPrintText: TCheckBox;
+    chkVisible: TCheckBox;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnPlayStopClick(Sender: TObject);
     procedure btnSetOverlayTextClick(Sender: TObject);
     procedure chkPrintTextClick(Sender: TObject);
+    procedure chkVisibleClick(Sender: TObject);
   private
     FUserID: Integer;
     FVideoWindow: TVideoWindow;
@@ -127,6 +129,11 @@ end;
 procedure TfrmMainForm.chkPrintTextClick(Sender: TObject);
 begin
   FVideoWindow.PrintOverlayText := chkPrintText.Checked;
+end;
+
+procedure TfrmMainForm.chkVisibleClick(Sender: TObject);
+begin
+  FVideoWindow.Visible := chkVisible.Checked;
 end;
 
 end.

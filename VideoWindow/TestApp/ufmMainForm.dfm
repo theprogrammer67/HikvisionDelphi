@@ -2,7 +2,7 @@ object frmMainForm: TfrmMainForm
   Left = 0
   Top = 0
   Caption = 'Video window test'
-  ClientHeight = 527
+  ClientHeight = 544
   ClientWidth = 446
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -3316,6 +3316,17 @@ object frmMainForm: TfrmMainForm
     Caption = 'Print overlay text'
     TabOrder = 8
     OnClick = chkPrintTextClick
+  end
+  object chkVisible: TCheckBox
+    Left = 32
+    Top = 519
+    Width = 97
+    Height = 17
+    Caption = 'Visible'
+    Checked = True
+    State = cbChecked
+    TabOrder = 9
+    OnClick = chkVisibleClick
   end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle

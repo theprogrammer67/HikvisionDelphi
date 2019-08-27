@@ -103,7 +103,7 @@ var
   LHFont: HFONT;
   LRect: TRect;
 begin
-  if (not FPrintOverlayText) or (Length(OverlayText) = 0) then
+  if (not FPrintOverlayText) or (Length(OverlayText) = 0) or (not Visible) then
     Exit;
 
   LHFont := CreateFont(FFontSize, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
