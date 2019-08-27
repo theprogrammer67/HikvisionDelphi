@@ -16,10 +16,10 @@ type
     procedure btn1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
   private
     FVideoPanel: TVideoPanel;
     procedure OnLoseParentWindow(ASender: TObject);
+    procedure OnVideoPanelResize(ASender: TObject);
   public
     { Public declarations }
   end;
@@ -44,16 +44,17 @@ end;
 procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
   FVideoPanel := TVideoPanel.Create(pnlVideo.Handle);
-end;
-
-procedure TfrmMainForm.FormShow(Sender: TObject);
-begin
-//  FVideoPanel.ShowPanel;
+  FVideoPanel.OnResize := OnVideoPanelResize;
 end;
 
 procedure TfrmMainForm.OnLoseParentWindow(ASender: TObject);
 begin
   FreeAndNil(FVideoPanel);
+end;
+
+procedure TfrmMainForm.OnVideoPanelResize(ASender: TObject);
+begin
+//  ShowMessage('resized');
 end;
 
 end.

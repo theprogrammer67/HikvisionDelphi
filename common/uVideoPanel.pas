@@ -22,14 +22,16 @@ type
     procedure SetPanelMode(const Value: TPanelMode);
     procedure InstallHookParent;
     procedure UninstallHookParent;
+    procedure RecalcVideoWindows;
     procedure AdjustWindowSize;
+    procedure WMSize(var Message: TWMSize); message WM_SIZE;
   public
     constructor Create(AParent: HWND); reintroduce;
     destructor Destroy; override;
   public
-    procedure ShowPanel;
     procedure DoLoseParentWindow;
   public
+    property OnResize;
     property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
     property OnLoseParentWindow: TNotifyEvent read FOnLoseParentWindow write FOnLoseParentWindow;
   end;
@@ -137,15 +139,14 @@ begin
     FParentWndHook := 0;
 end;
 
+procedure TVideoPanel.RecalcVideoWindows;
+begin
+
+end;
+
 procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);
 begin
   FPanelMode := Value;
-end;
-
-procedure TVideoPanel.ShowPanel;
-begin
-  Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
-  Self.Visible := True;
 end;
 
 procedure TVideoPanel.UninstallHookParent;
@@ -153,6 +154,12 @@ begin
   if FParentWndHook <> 0 then
     UnhookWindowsHookEx(FParentWndHook);
   FParentWndHook := 0;
+end;
+
+procedure TVideoPanel.WMSize(var Message: TWMSize);
+begin
+  inherited;
+  RecalcVideoWindows;
 end;
 
 end.
