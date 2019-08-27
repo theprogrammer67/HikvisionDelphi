@@ -13,7 +13,13 @@ type
     btnSIngle: TButton;
     btnMulti: TButton;
     btn1: TButton;
+    btn2: TButton;
+    btn3: TButton;
+    btn4: TButton;
     procedure btn1Click(Sender: TObject);
+    procedure btn2Click(Sender: TObject);
+    procedure btn3Click(Sender: TObject);
+    procedure btn4Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -34,6 +40,21 @@ implementation
 procedure TfrmMainForm.btn1Click(Sender: TObject);
 begin
   FreeAndNil(pnlVideo);
+end;
+
+procedure TfrmMainForm.btn2Click(Sender: TObject);
+begin
+  FVideoPanel.PanelMode := pm22;
+end;
+
+procedure TfrmMainForm.btn3Click(Sender: TObject);
+begin
+  FVideoPanel.PanelMode := pm44;
+end;
+
+procedure TfrmMainForm.btn4Click(Sender: TObject);
+begin
+  FVideoPanel.PanelMode := pmSingle;
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);

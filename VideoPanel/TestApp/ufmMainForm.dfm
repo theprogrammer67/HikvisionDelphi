@@ -52,6 +52,33 @@ object frmMainForm: TfrmMainForm
       TabOrder = 2
       OnClick = btn1Click
     end
+    object btn2: TButton
+      Left = 464
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = 'btn2'
+      TabOrder = 3
+      OnClick = btn2Click
+    end
+    object btn3: TButton
+      Left = 383
+      Top = 4
+      Width = 75
+      Height = 25
+      Caption = 'btn3'
+      TabOrder = 4
+      OnClick = btn3Click
+    end
+    object btn4: TButton
+      Left = 312
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = 'btn4'
+      TabOrder = 5
+      OnClick = btn4Click
+    end
   end
   object pnlVideo: TPanel
     Left = 0
