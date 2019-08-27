@@ -44,6 +44,15 @@ object frmMainForm: TfrmMainForm
       Caption = 'btnMulti'
       TabOrder = 1
     end
+    object btn1: TButton
+      Left = 544
+      Top = 4
+      Width = 75
+      Height = 25
+      Caption = 'btn1'
+      TabOrder = 2
+      OnClick = btn1Click
+    end
   end
   object pnlVideo: TPanel
     Left = 0

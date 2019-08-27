@@ -12,11 +12,14 @@ type
     pnlVideo: TPanel;
     btnSIngle: TButton;
     btnMulti: TButton;
+    btn1: TButton;
+    procedure btn1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
     FVideoPanel: TVideoPanel;
+    procedure OnLoseParentWindow(ASender: TObject);
   public
     { Public declarations }
   end;
@@ -27,6 +30,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TfrmMainForm.btn1Click(Sender: TObject);
+begin
+  FreeAndNil(pnlVideo);
+end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
 begin
@@ -41,6 +49,11 @@ end;
 procedure TfrmMainForm.FormShow(Sender: TObject);
 begin
 //  FVideoPanel.ShowPanel;
+end;
+
+procedure TfrmMainForm.OnLoseParentWindow(ASender: TObject);
+begin
+  FreeAndNil(FVideoPanel);
 end;
 
 end.

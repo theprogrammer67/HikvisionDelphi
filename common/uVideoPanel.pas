@@ -3,7 +3,7 @@
 interface
 
 uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
-  System.SysUtils, Vcl.Graphics, Winapi.Messages;
+  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes;
 
 type
   TPanelMode = (pmSingle, mt22, mt33, mt44);
@@ -17,6 +17,7 @@ type
     FPanelMode: TPanelMode;
     FParentWndHook: HHOOK;
     FVideoWindows: TObjectList<TVideoWindow>;
+    FOnLoseParentWindow: TNotifyEvent;
   private
     procedure SetPanelMode(const Value: TPanelMode);
     procedure InstallHookParent;
@@ -27,8 +28,10 @@ type
     destructor Destroy; override;
   public
     procedure ShowPanel;
+    procedure DoLoseParentWindow;
   public
     property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
+    property OnLoseParentWindow: TNotifyEvent read FOnLoseParentWindow write FOnLoseParentWindow;
   end;
 
 implementation
@@ -37,7 +40,7 @@ resourcestring
   RsErrSingletoneOnly =
     'Допустимо использование только одного объекта TVideoPanel';
 
-function ParentHookProc(nCode: integer; wParam: wParam; lParam: lParam)
+function CallWndRetProc(nCode: integer; wParam: wParam; lParam: lParam)
   : LRESULT; stdcall;
 var
   LMessage: UINT;
@@ -57,6 +60,8 @@ begin
     case LMessage of
       WM_SIZE:
         TVideoPanel.FObject.AdjustWindowSize;
+      WM_DESTROY:
+        TVideoPanel.FObject.DoLoseParentWindow;
     end;
   end;
 end;
@@ -73,11 +78,11 @@ begin
 
   if not IsWindow(ParentWindow) then
   begin // Потеряли родительское окно, криминал!
-//    DoLoseParentWindow;
+    DoLoseParentWindow;
     Exit;
   end;
 
-  if not GetWindowREct(ParentWindow, R) then
+  if not GetWindowRect(ParentWindow, R) then
     Exit;
 
   LNewWidth := R.Right - R.Left;
@@ -117,10 +122,16 @@ begin
   inherited;
 end;
 
+procedure TVideoPanel.DoLoseParentWindow;
+begin
+  if Assigned(OnLoseParentWindow) then
+    OnLoseParentWindow(Self);
+end;
+
 procedure TVideoPanel.InstallHookParent;
 begin
   if ParentWindow <> 0 then
-    FParentWndHook := SetWindowsHookEx(WH_CALLWNDPROCRET, @ParentHookProc, 0,
+    FParentWndHook := SetWindowsHookEx(WH_CALLWNDPROCRET, @CallWndRetProc, 0,
       GetCurrentThreadID)
   else
     FParentWndHook := 0;
