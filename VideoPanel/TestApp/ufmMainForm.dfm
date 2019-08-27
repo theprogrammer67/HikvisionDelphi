@@ -27,29 +27,13 @@ object frmMainForm: TfrmMainForm
     BevelOuter = bvNone
     TabOrder = 0
     ExplicitTop = 252
-    object btnSIngle: TButton
-      Left = 24
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'btnSIngle'
-      TabOrder = 0
-    end
-    object btnMulti: TButton
-      Left = 112
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'btnMulti'
-      TabOrder = 1
-    end
     object btn1: TButton
       Left = 544
       Top = 4
       Width = 75
       Height = 25
       Caption = 'btn1'
-      TabOrder = 2
+      TabOrder = 0
       OnClick = btn1Click
     end
     object btn2: TButton
@@ -58,7 +42,7 @@ object frmMainForm: TfrmMainForm
       Width = 75
       Height = 25
       Caption = 'btn2'
-      TabOrder = 3
+      TabOrder = 1
       OnClick = btn2Click
     end
     object btn3: TButton
@@ -67,7 +51,7 @@ object frmMainForm: TfrmMainForm
       Width = 75
       Height = 25
       Caption = 'btn3'
-      TabOrder = 4
+      TabOrder = 2
       OnClick = btn3Click
     end
     object btn4: TButton
@@ -76,8 +60,17 @@ object frmMainForm: TfrmMainForm
       Width = 75
       Height = 25
       Caption = 'btn4'
-      TabOrder = 5
+      TabOrder = 3
       OnClick = btn4Click
+    end
+    object btnPlayStop: TButton
+      Left = 17
+      Top = 4
+      Width = 71
+      Height = 25
+      Caption = 'btnPlayStop'
+      TabOrder = 4
+      OnClick = btnPlayStopClick
     end
   end
   object pnlVideo: TPanel
@@ -91,5 +84,10 @@ object frmMainForm: TfrmMainForm
     ParentBackground = False
     TabOrder = 1
     ExplicitTop = 4
+  end
+  object appev1: TApplicationEvents
+    OnIdle = appev1Idle
+    Left = 208
+    Top = 128
   end
 end

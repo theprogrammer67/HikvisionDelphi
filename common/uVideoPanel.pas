@@ -35,6 +35,7 @@ type
     property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
     property OnLoseParentWindow: TNotifyEvent read FOnLoseParentWindow
       write FOnLoseParentWindow;
+    property VideoWindows: TObjectList<TVideoWindow> read FVideoWindows;
   end;
 
 implementation
@@ -106,6 +107,8 @@ begin
   if Assigned(FObject) then
     raise Exception.Create(RsErrSingletoneOnly);
   FObject := Self;
+
+  DoubleBuffered := True;
 
   FVideoWindows := TObjectList<TVideoWindow>.Create;
   for I := 0 to FWindowsCount - 1 do

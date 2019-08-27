@@ -24,7 +24,7 @@ type
     class destructor Destroy;
   private
     function GetIsPlaying: Boolean;
-    procedure PrintNoVideo;
+    procedure PrintCaptionDisabled;
   private
     class procedure DrawFun(lRealHandle: LongInt; hDc: IntPtr; dwUser: UINT);
       stdcall; static;
@@ -130,7 +130,7 @@ begin
   inherited;
   if IsPlaying then
     Exit;
-  PrintNoVideo;
+  PrintCaptionDisabled;
 end;
 
 procedure TVideoWindow.Play(AUserID: Integer);
@@ -154,11 +154,11 @@ begin
     RaiseLastHVError;
 end;
 
-procedure TVideoWindow.PrintNoVideo;
+procedure TVideoWindow.PrintCaptionDisabled;
 var
   LRect: TRect;
 const
-  LText: string = 'NO VIDEO';
+  LText: string = 'DISABLED';
 begin
   Canvas.Font.Size := 12;
   Canvas.Font.Name := 'Courier New';
