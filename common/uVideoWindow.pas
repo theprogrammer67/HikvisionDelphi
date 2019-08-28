@@ -11,9 +11,6 @@ type
     FChannel: Integer;
     FRealHandle: Integer;
     FOverlayText: string;
-    FFontSize: Integer;
-    FFontName: TFontName;
-    FFontColor: TColor;
     FPrintOverlayText: Boolean;
   private
     class var FObjects: TObjectList<TVideoWindow>;
@@ -41,9 +38,6 @@ type
     property Channel: Integer read FChannel write FChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
-    property FontName: TFontName read FFontName write FFontName;
-    property FontSize: Integer read FFontSize write FFontSize;
-    property FontColor: TColor read FFontColor write FFontColor;
     property PrintOverlayText: Boolean read FPrintOverlayText write FPrintOverlayText;
   end;
 
@@ -60,9 +54,9 @@ begin
   FRealHandle := -1;
   Color := clNavy;
 
-  FFontName := 'Courier New';
-  FFontSize := 24;
-  FFontColor := RGB(160, 255, 150);
+  Font.Name := 'Courier New';
+  Font.Size := 24;
+  Font.Color := RGB(160, 255, 150);
 
   RegisterObj;
 end;
@@ -106,12 +100,12 @@ begin
   if (not FPrintOverlayText) or (Length(OverlayText) = 0) or (not Visible) then
     Exit;
 
-  LHFont := CreateFont(FFontSize, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
-    PWideChar(FFontName));
+  LHFont := CreateFont(Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
+    PWideChar(Font.Name));
   LObj := SelectObject(hDc, LHFont);
   try
     SetBkMode(hDc, TRANSPARENT);
-    SetTextColor(hDc, FFontColor);
+    SetTextColor(hDc, Font.Color);
     LRect := Rect(0, 0, Width, Height);
     DrawText(hDc, PWideChar(OverlayText), Length(OverlayText), LRect,
       DT_LEFT or DT_TOP);
