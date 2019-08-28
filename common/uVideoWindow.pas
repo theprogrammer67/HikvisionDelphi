@@ -7,6 +7,16 @@ uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
 
 type
   TVideoWindow = class(TCustomControl)
+  private const
+    CAPTION_DISABLED: string = 'DISABLED';
+    CAPTION_STOPPED: string = 'VIDEO STOPPED';
+    DEF_COLOR = clNavy;
+    STATUS_FONTCOLOR = $00FF96A0;
+    STATUS_FONTNAME = 'Impact';
+    STATUS_FONTSIZE = 24;
+    DEF_FONTNAME = 'Courier New';
+    DEF_FONTSIZE = 24;
+    DEF_FONTCOLOR = clLime;
   private
     FChannel: Integer;
     FRealHandle: Integer;
@@ -21,7 +31,7 @@ type
     class destructor Destroy;
   private
     function GetIsPlaying: Boolean;
-    procedure PrintCaptionDisabled;
+    procedure PrintStatusCaption;
   private
     class procedure DrawFun(lRealHandle: LongInt; hDc: IntPtr; dwUser: UINT);
       stdcall; static;
@@ -53,15 +63,16 @@ begin
   inherited Create(AParent);
   Parent := AParent;
   FRealHandle := -1;
-  Color := clNavy;
+  Color := DEF_COLOR;
+  Enabled := False;
 
   if Assigned(Parent) then
     ParentFont := True
   else
   begin
-    Font.Name := 'Courier New';
-    Font.Size := 24;
-    Font.Color := RGB(160, 255, 150);
+    Font.Name := DEF_FONTNAME;
+    Font.Size := DEF_FONTSIZE;
+    Font.Color := DEF_FONTCOLOR;
   end;
 
   RegisterObj;
@@ -103,7 +114,8 @@ var
   LHFont: HFONT;
   LRect: TRect;
 begin
-  if (not FPrintOverlayText) or (Length(OverlayText) = 0) or (not Visible) then
+  if (not FPrintOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
+    (not Enabled) then
     Exit;
 
   LHFont := CreateFont(Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
@@ -125,13 +137,10 @@ begin
   Result := FRealHandle >= 0;
 end;
 
-
 procedure TVideoWindow.Paint;
 begin
   inherited;
-  if IsPlaying then
-    Exit;
-  PrintCaptionDisabled;
+  PrintStatusCaption;
 end;
 
 procedure TVideoWindow.Play(AUserID: Integer);
@@ -155,15 +164,21 @@ begin
     RaiseLastHVError;
 end;
 
-procedure TVideoWindow.PrintCaptionDisabled;
+procedure TVideoWindow.PrintStatusCaption;
 var
   LRect: TRect;
-const
-  LText: string = 'DISABLED';
+  LText: string;
 begin
+  if not Enabled then
+    LText := CAPTION_DISABLED
+  else if not IsPlaying then
+    LText := CAPTION_STOPPED
+  else
+    Exit;
+
   Canvas.Font.Size := 12;
-  Canvas.Font.Name := 'Courier New';
-  Canvas.Font.Color := RGB(160, 150, 255);
+  Canvas.Font.Name := 'Impact';
+  Canvas.Font.Color := STATUS_FONTCOLOR;
   Canvas.Brush.Style := bsClear;
 
   LRect := Rect(0, 0, Width, Height);
@@ -181,6 +196,7 @@ begin
   if FRealHandle >= 0 then
     NET_DVR_StopRealPlay(FRealHandle);
   FRealHandle := -1;
+  Invalidate;
 end;
 
 procedure TVideoWindow.UnRegisterObj;

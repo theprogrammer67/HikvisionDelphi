@@ -29,11 +29,13 @@ type
     procedure RecalcVideoWindows;
     procedure AdjustWindowSize;
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    procedure DoLoseParentWindow;
   public
     constructor Create(AParent: HWND); reintroduce;
     destructor Destroy; override;
   public
-    procedure DoLoseParentWindow;
+    procedure PlayAll(AUserID: Integer);
+    procedure StopAll;
   public
     property OnResize;
     property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
@@ -48,7 +50,7 @@ resourcestring
   RsErrSingletoneOnly =
     'Допустимо использование только одного объекта TVideoPanel';
 
-function CallWndRetProc(nCode: integer; wParam: wParam; lParam: lParam)
+function CallWndRetProc(nCode: Integer; wParam: wParam; lParam: lParam)
   : LRESULT; stdcall;
 var
   LMessage: UINT;
@@ -80,7 +82,7 @@ end;
 procedure TVideoPanel.AdjustWindowSize;
 var
   R: TRect;
-  LNewWidth, LNewHeight: integer;
+  LNewWidth, LNewHeight: Integer;
 begin
   if (not Visible) or (ParentWindow = 0) then
     Exit;
@@ -105,6 +107,7 @@ end;
 constructor TVideoPanel.Create(AParent: HWND);
 var
   I: Byte;
+  LVideoWindow: TVideoWindow;
 begin
   inherited CreateParented(AParent);
 
@@ -115,14 +118,18 @@ begin
   DoubleBuffered := True;
 
   Color := DEF_COLOR;
-  Font.Name :=DEF_FONTNAME;
+  Font.Name := DEF_FONTNAME;
   Font.Size := DEF_FONTSIZE;
   Font.Color := DEF_FONTCOLOR;
   Align := alClient;
 
   FVideoWindows := TObjectList<TVideoWindow>.Create;
   for I := 0 to WIN_COUNT - 1 do
-    FVideoWindows.Add(TVideoWindow.Create(Self));
+  begin
+    LVideoWindow := TVideoWindow.Create(Self);
+    FVideoWindows.Add(LVideoWindow);
+    LVideoWindow.Channel := I + 1;
+  end;
 
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
@@ -152,11 +159,20 @@ begin
     FParentWndHook := 0;
 end;
 
+procedure TVideoPanel.PlayAll(AUserID: Integer);
+var
+  LVideoWindow: TVideoWindow;
+begin
+  for LVideoWindow in VideoWindows do
+    if LVideoWindow.Enabled then
+      LVideoWindow.Play(AUserID);
+end;
+
 procedure TVideoPanel.RecalcVideoWindows;
 var
   FVideoWindow: TVideoWindow;
   LRatio: Byte;
-  LCount, LHeight, LWidth, I, XNum, YNum: integer;
+  LCount, LHeight, LWidth, I, XNum, YNum: Integer;
 begin
   Visible := False;
   try
@@ -190,6 +206,14 @@ procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);
 begin
   FPanelMode := Value;
   RecalcVideoWindows;
+end;
+
+procedure TVideoPanel.StopAll;
+var
+  LVideoWindow: TVideoWindow;
+begin
+  for LVideoWindow in VideoWindows do
+    LVideoWindow.Stop;
 end;
 
 procedure TVideoPanel.UninstallHookParent;

@@ -102,6 +102,7 @@ procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
   FVideoWindow := TVideoWindow.Create(pnlVideo);
   FVideoWindow.Align := alClient;
+  FVideoWindow.Enabled := True;
 
   FSDKInited := False;
 end;

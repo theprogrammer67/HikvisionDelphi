@@ -3342,9 +3342,6 @@ object frmMainForm: TfrmMainForm
     Font.Style = []
     ParentFont = False
     TabOrder = 10
-    ExplicitLeft = 8
-    ExplicitTop = 8
-    ExplicitWidth = 441
   end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle
