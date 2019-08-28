@@ -110,6 +110,10 @@ begin
 
   DoubleBuffered := True;
 
+  Font.Name := 'Courier New';
+  Font.Size := 24;
+  Font.Color := RGB(160, 255, 150);
+
   FVideoWindows := TObjectList<TVideoWindow>.Create;
   for I := 0 to FWindowsCount - 1 do
     FVideoWindows.Add(TVideoWindow.Create(Self));

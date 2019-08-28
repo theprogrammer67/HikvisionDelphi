@@ -38,7 +38,8 @@ type
     property Channel: Integer read FChannel write FChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
-    property PrintOverlayText: Boolean read FPrintOverlayText write FPrintOverlayText;
+    property PrintOverlayText: Boolean read FPrintOverlayText
+      write FPrintOverlayText;
   end;
 
 implementation
@@ -54,9 +55,14 @@ begin
   FRealHandle := -1;
   Color := clNavy;
 
-  Font.Name := 'Courier New';
-  Font.Size := 24;
-  Font.Color := RGB(160, 255, 150);
+  if Assigned(Parent) then
+    ParentFont := True
+  else
+  begin
+    Font.Name := 'Courier New';
+    Font.Size := 24;
+    Font.Color := RGB(160, 255, 150);
+  end;
 
   RegisterObj;
 end;
@@ -119,6 +125,7 @@ begin
   Result := FRealHandle >= 0;
 end;
 
+
 procedure TVideoWindow.Paint;
 begin
   inherited;
@@ -136,7 +143,7 @@ begin
   LPreviewInfo.lChannel := FChannel;
   LPreviewInfo.dwStreamType := 0;
   LPreviewInfo.dwLinkMode := 0;
-  LPreviewInfo.bBlocked := true;
+  LPreviewInfo.bBlocked := True;
   LPreviewInfo.dwDisplayBufNum := 1;
   LPreviewInfo.byProtoType := 0;
   LPreviewInfo.byPreviewMode := 0;

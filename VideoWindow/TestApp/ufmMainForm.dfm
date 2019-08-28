@@ -3328,6 +3328,24 @@ object frmMainForm: TfrmMainForm
     TabOrder = 9
     OnClick = chkVisibleClick
   end
+  object pnlVideo: TPanel
+    Left = 0
+    Top = 0
+    Width = 446
+    Height = 249
+    Align = alTop
+    Caption = 'pnlVideo'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clLime
+    Font.Height = -40
+    Font.Name = 'Courier New'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 10
+    ExplicitLeft = 8
+    ExplicitTop = 8
+    ExplicitWidth = 441
+  end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle
     Left = 208

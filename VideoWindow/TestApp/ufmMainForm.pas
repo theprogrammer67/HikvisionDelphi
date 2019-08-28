@@ -21,6 +21,7 @@ type
     mmoText: TMemo;
     chkPrintText: TCheckBox;
     chkVisible: TCheckBox;
+    pnlVideo: TPanel;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -99,12 +100,8 @@ end;
 
 procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
-  FVideoWindow := TVideoWindow.Create(self);
-
-  FVideoWindow.Height := 250;
-  FVideoWindow.Width := Width;
-  FVideoWindow.Left := 0;
-  FVideoWindow.Top := 0;
+  FVideoWindow := TVideoWindow.Create(pnlVideo);
+  FVideoWindow.Align := alClient;
 
   FSDKInited := False;
 end;
