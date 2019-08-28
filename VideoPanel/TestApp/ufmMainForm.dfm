@@ -26,51 +26,44 @@ object frmMainForm: TfrmMainForm
     BevelKind = bkFlat
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 252
-    object btn1: TButton
-      Left = 544
+    DesignSize = (
+      633
+      39)
+    object btnRemoveParent: TButton
+      Left = 504
       Top = 4
-      Width = 75
+      Width = 115
       Height = 25
-      Caption = 'btn1'
+      Anchors = [akTop, akRight]
+      Caption = 'Remove parent'
       TabOrder = 0
-      OnClick = btn1Click
-    end
-    object btn2: TButton
-      Left = 464
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'btn2'
-      TabOrder = 1
-      OnClick = btn2Click
-    end
-    object btn3: TButton
-      Left = 383
-      Top = 4
-      Width = 75
-      Height = 25
-      Caption = 'btn3'
-      TabOrder = 2
-      OnClick = btn3Click
-    end
-    object btn4: TButton
-      Left = 312
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'btn4'
-      TabOrder = 3
-      OnClick = btn4Click
+      OnClick = btnRemoveParentClick
     end
     object btnPlayStop: TButton
-      Left = 17
+      Left = 427
       Top = 4
       Width = 71
       Height = 25
+      Anchors = [akTop, akRight]
       Caption = 'btnPlayStop'
-      TabOrder = 4
+      TabOrder = 1
       OnClick = btnPlayStopClick
+    end
+    object cbbMode: TComboBox
+      Left = 11
+      Top = 4
+      Width = 145
+      Height = 24
+      Style = csDropDownList
+      ItemIndex = 0
+      TabOrder = 2
+      Text = 'Single'
+      OnChange = cbbModeChange
+      Items.Strings = (
+        'Single'
+        '2 * 2'
+        '3 * 3'
+        '4 * 4')
     end
   end
   object pnlVideo: TPanel
@@ -83,7 +76,6 @@ object frmMainForm: TfrmMainForm
     Color = clSkyBlue
     ParentBackground = False
     TabOrder = 1
-    ExplicitTop = 4
   end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle

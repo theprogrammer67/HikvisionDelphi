@@ -10,7 +10,11 @@ type
 
   TVideoPanel = class(TCustomControl)
   private const
-    FWindowsCount: Byte = 16;
+    WIN_COUNT: Byte = 16;
+    DEF_COLOR = clSilver;
+    DEF_FONTNAME = 'Courier New';
+    DEF_FONTSIZE = 24;
+    DEF_FONTCOLOR = clLime;
   private
     class var FObject: TVideoPanel;
   private
@@ -110,16 +114,16 @@ begin
 
   DoubleBuffered := True;
 
-  Font.Name := 'Courier New';
-  Font.Size := 24;
-  Font.Color := RGB(160, 255, 150);
+  Color := DEF_COLOR;
+  Font.Name :=DEF_FONTNAME;
+  Font.Size := DEF_FONTSIZE;
+  Font.Color := DEF_FONTCOLOR;
+  Align := alClient;
 
   FVideoWindows := TObjectList<TVideoWindow>.Create;
-  for I := 0 to FWindowsCount - 1 do
+  for I := 0 to WIN_COUNT - 1 do
     FVideoWindows.Add(TVideoWindow.Create(Self));
 
-  Align := alClient;
-  Color := clSilver;
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
   InstallHookParent;

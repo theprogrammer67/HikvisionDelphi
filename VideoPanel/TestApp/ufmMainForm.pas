@@ -11,18 +11,17 @@ type
   TfrmMainForm = class(TForm)
     pnlControls: TPanel;
     pnlVideo: TPanel;
-    btn1: TButton;
-    btn2: TButton;
-    btn3: TButton;
-    btn4: TButton;
+    btnRemoveParent: TButton;
     btnPlayStop: TButton;
     appev1: TApplicationEvents;
+    cbbMode: TComboBox;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
-    procedure btn1Click(Sender: TObject);
+    procedure btnRemoveParentClick(Sender: TObject);
     procedure btn2Click(Sender: TObject);
     procedure btn3Click(Sender: TObject);
     procedure btn4Click(Sender: TObject);
     procedure btnPlayStopClick(Sender: TObject);
+    procedure cbbModeChange(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -60,7 +59,7 @@ begin
     btnPlayStop.Caption := 'Play';
 end;
 
-procedure TfrmMainForm.btn1Click(Sender: TObject);
+procedure TfrmMainForm.btnRemoveParentClick(Sender: TObject);
 begin
   FreeAndNil(pnlVideo);
 end;
@@ -86,6 +85,11 @@ begin
     Stop
   else
     Play;
+end;
+
+procedure TfrmMainForm.cbbModeChange(Sender: TObject);
+begin
+  FVideoPanel.PanelMode := TPanelMode(cbbMode.ItemIndex);
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
