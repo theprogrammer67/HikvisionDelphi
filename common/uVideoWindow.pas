@@ -63,11 +63,13 @@ type
     property IsPlaying: Boolean read GetIsPlaying;
     property PrintOverlayText: Boolean read FPrintOverlayText
       write FPrintOverlayText;
+    property UserID: Integer read FUserID write FUserID;
   end;
 
 implementation
 
 uses System.Types;
+
 
 { TWideoWindow }
 
@@ -208,6 +210,9 @@ procedure TVideoWindow.Play(AUserID: Integer);
 var
   LPreviewInfo: NET_DVR_PREVIEWINFO;
 begin
+  if AUserID < 0 then
+    raise Exception.Create(RsErrUserNotAuthorized);
+
   FUserID := AUserID;
 
   ZeroMemory(@LPreviewInfo, SizeOf(LPreviewInfo));

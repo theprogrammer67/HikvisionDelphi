@@ -13,7 +13,6 @@ type
   TfrmMainForm = class(TForm)
     pnlControls: TPanel;
     pnlVideo: TPanel;
-    btnRemoveParent: TButton;
     btnPlayStop: TButton;
     appev1: TApplicationEvents;
     cbbMode: TComboBox;
@@ -32,12 +31,14 @@ type
     chkPrintText: TCheckBox;
     chkVisible: TCheckBox;
     chkEnable: TCheckBox;
+    btnAuthorize: TButton;
+    Button1: TButton;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
-    procedure btnRemoveParentClick(Sender: TObject);
     procedure btn2Click(Sender: TObject);
     procedure btn3Click(Sender: TObject);
     procedure btn4Click(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
+    procedure btnAuthorizeClick(Sender: TObject);
     procedure btnPlayStopClick(Sender: TObject);
     procedure cbbModeChange(Sender: TObject);
     procedure cbbWIndowChange(Sender: TObject);
@@ -45,10 +46,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure tsSettingsShow(Sender: TObject);
   private
-    FUserID: Integer;
-    FSDKInited: Boolean;
     FVideoPanel: TVideoPanel;
   private
+    procedure Authorize;
     procedure Play;
     procedure Stop;
     procedure UpdateWindowControls;
@@ -80,9 +80,19 @@ begin
     btnPlayStop.Caption := 'Play';
 end;
 
-procedure TfrmMainForm.btnRemoveParentClick(Sender: TObject);
+procedure TfrmMainForm.Authorize;
+var
+  LDeviceInfo: NET_DVR_DEVICEINFO_V30;
 begin
-  FreeAndNil(pnlVideo);
+  FVideoPanel.StopAll;
+
+  ZeroMemory(@LDeviceInfo, SizeOf(LDeviceInfo));
+  FVideoPanel.UserID := NET_DVR_Login_V30
+    (PAnsiChar(AnsiString(lbledtAddress.Text)), StrToInt(lbledtPort.Text),
+    PAnsiChar(AnsiString(lbledtUser.Text)),
+    PAnsiChar(AnsiString(lbledtPassword.Text)), LDeviceInfo);
+  if FVideoPanel.UserID < 0 then
+    RaiseLastHVError;
 end;
 
 procedure TfrmMainForm.btn2Click(Sender: TObject);
@@ -105,6 +115,11 @@ begin
   UpdateWindowSettings;
 end;
 
+procedure TfrmMainForm.btnAuthorizeClick(Sender: TObject);
+begin
+  Authorize;
+end;
+
 procedure TfrmMainForm.btnPlayStopClick(Sender: TObject);
 begin
   if FVideoPanel.VideoWindows[0].IsPlaying then
@@ -125,18 +140,17 @@ end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
 begin
-  if FSDKInited then
-    NET_DVR_Cleanup;
+  NET_DVR_Cleanup;
   FreeAndNil(FVideoPanel);
 end;
 
 procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
-  FSDKInited := False;
   FVideoPanel := TVideoPanel.Create(pnlVideo.Handle);
   FVideoPanel.OnLoseParentWindow := OnLoseParentWindow;
 
   pgcPages.ActivePage := tsVideo;
+  NET_DVR_Init;
 end;
 
 procedure TfrmMainForm.OnLoseParentWindow(ASender: TObject);
@@ -145,28 +159,12 @@ begin
 end;
 
 procedure TfrmMainForm.Play;
-var
-  LDeviceInfo: NET_DVR_DEVICEINFO_V30;
 begin
   FVideoPanel.StopAll;
 
-  if not FSDKInited then
-  begin
-    FSDKInited := NET_DVR_Init;
-    if not FSDKInited then
-      raise Exception.Create('NET_DVR_Init error!');
-  end;
-
-  ZeroMemory(@LDeviceInfo, SizeOf(LDeviceInfo));
-  FUserID := NET_DVR_Login_V30(PAnsiChar(AnsiString(lbledtAddress.Text)),
-    StrToInt(lbledtPort.Text), PAnsiChar(AnsiString(lbledtUser.Text)),
-    PAnsiChar(AnsiString(lbledtPassword.Text)), LDeviceInfo);
-  if FUserID < 0 then
-    RaiseLastHVError;
-
   Screen.Cursor := crHourGlass;
   try
-    FVideoPanel.PlayAll(FUserID);
+    FVideoPanel.PlayAll;
   finally
     Screen.Cursor := crDefault;
   end;

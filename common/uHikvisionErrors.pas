@@ -47,6 +47,9 @@ const
   NET_DVR_CONVERT_SDK_ERROR = 85; // Load SystemTransform.dll failed.
 
 resourcestring
+  RsErrUserNotAuthorized = 'User not authorized';
+
+resourcestring
   RsErr_NET_DVR_NOERROR = 'No error.';
   RsErr_NET_DVR_PASSWORD_ERROR = 'User name or password error.';
   RsErr_NET_DVR_NOINIT = 'SDK is not initialized.';

@@ -18,6 +18,7 @@ type
   private
     class var FObject: TVideoPanel;
   private
+    FUserID: Integer;
     FPanelMode: TPanelMode;
     FParentWndHook: HHOOK;
     FVideoWindows: TObjectList<TVideoWindow>;
@@ -30,11 +31,13 @@ type
     procedure AdjustWindowSize;
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure DoLoseParentWindow;
+    procedure SetUserID(const Value: Integer);
   public
     constructor Create(AParent: HWND); reintroduce;
     destructor Destroy; override;
   public
-    procedure PlayAll(AUserID: Integer);
+    procedure PlayAll(AUserID: Integer); overload;
+    procedure PlayAll; overload;
     procedure StopAll;
   public
     property OnResize;
@@ -42,6 +45,7 @@ type
     property OnLoseParentWindow: TNotifyEvent read FOnLoseParentWindow
       write FOnLoseParentWindow;
     property VideoWindows: TObjectList<TVideoWindow> read FVideoWindows;
+    property UserID: Integer read FUserID write SetUserID;
   end;
 
 implementation
@@ -131,6 +135,7 @@ begin
     LVideoWindow.Channel := I + 1;
   end;
 
+  UserID := -1;
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
   InstallHookParent;
@@ -159,13 +164,19 @@ begin
     FParentWndHook := 0;
 end;
 
+procedure TVideoPanel.PlayAll;
+begin
+  PlayAll(UserID);
+end;
+
 procedure TVideoPanel.PlayAll(AUserID: Integer);
 var
   LVideoWindow: TVideoWindow;
 begin
+  UserID := AUserID;
   for LVideoWindow in VideoWindows do
     if LVideoWindow.Enabled then
-      LVideoWindow.Play(AUserID);
+      LVideoWindow.Play;
 end;
 
 procedure TVideoPanel.RecalcVideoWindows;
@@ -206,6 +217,18 @@ procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);
 begin
   FPanelMode := Value;
   RecalcVideoWindows;
+end;
+
+procedure TVideoPanel.SetUserID(const Value: Integer);
+var
+  LVideoWindow: TVideoWindow;
+begin
+  FUserID := Value;
+  if not Assigned(VideoWindows) then
+    Exit;
+
+  for LVideoWindow in VideoWindows do
+    LVideoWindow.UserID := FUserID;
 end;
 
 procedure TVideoPanel.StopAll;

@@ -26,32 +26,19 @@ object frmMainForm: TfrmMainForm
     BevelKind = bkFlat
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 348
-    ExplicitWidth = 633
     DesignSize = (
       714
       39)
-    object btnRemoveParent: TButton
-      Left = 585
-      Top = 4
-      Width = 115
-      Height = 25
-      Anchors = [akTop, akRight]
-      Caption = 'Remove parent'
-      TabOrder = 0
-      OnClick = btnRemoveParentClick
-      ExplicitLeft = 504
-    end
     object btnPlayStop: TButton
-      Left = 508
+      Left = 639
       Top = 4
       Width = 71
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'btnPlayStop'
-      TabOrder = 1
+      Default = True
+      TabOrder = 0
       OnClick = btnPlayStopClick
-      ExplicitLeft = 427
     end
     object cbbMode: TComboBox
       Left = 11
@@ -60,7 +47,7 @@ object frmMainForm: TfrmMainForm
       Height = 24
       Style = csDropDownList
       ItemIndex = 0
-      TabOrder = 2
+      TabOrder = 1
       Text = 'Single'
       OnChange = cbbModeChange
       Items.Strings = (
@@ -69,23 +56,26 @@ object frmMainForm: TfrmMainForm
         '3 * 3'
         '4 * 4')
     end
+    object Button1: TButton
+      Left = 496
+      Top = 4
+      Width = 137
+      Height = 25
+      Caption = 'Authorize user'
+      TabOrder = 2
+      OnClick = btnAuthorizeClick
+    end
   end
   object pgcPages: TPageControl
     Left = 0
     Top = 0
     Width = 714
     Height = 397
-    ActivePage = tsSettings
+    ActivePage = tsVideo
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 184
-    ExplicitTop = 24
-    ExplicitWidth = 289
-    ExplicitHeight = 193
     object tsVideo: TTabSheet
       Caption = 'Video'
-      ExplicitWidth = 281
-      ExplicitHeight = 162
       object pnlVideo: TPanel
         Left = 0
         Top = 0
@@ -96,16 +86,12 @@ object frmMainForm: TfrmMainForm
         Color = clSkyBlue
         ParentBackground = False
         TabOrder = 0
-        ExplicitWidth = 633
-        ExplicitHeight = 348
       end
     end
     object tsSettings: TTabSheet
       Caption = 'Settings'
       ImageIndex = 1
       OnShow = tsSettingsShow
-      ExplicitWidth = 625
-      ExplicitHeight = 317
       object lbledtAddress: TLabeledEdit
         Left = 32
         Top = 32
@@ -249,6 +235,15 @@ object frmMainForm: TfrmMainForm
           Caption = 'Enable'
           TabOrder = 6
         end
+      end
+      object btnAuthorize: TButton
+        Left = 352
+        Top = 74
+        Width = 137
+        Height = 25
+        Caption = 'Authorize user'
+        TabOrder = 5
+        OnClick = btnAuthorizeClick
       end
     end
   end
