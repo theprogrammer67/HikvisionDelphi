@@ -48,6 +48,7 @@ const
 
 resourcestring
   RsErrUserNotAuthorized = 'User not authorized';
+  RsErrHasNoParentWindow = 'Parent window not found';
 
 resourcestring
   RsErr_NET_DVR_NOERROR = 'No error.';

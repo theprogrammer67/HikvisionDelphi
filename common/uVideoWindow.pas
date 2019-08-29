@@ -3,7 +3,8 @@
 interface
 
 uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
-  Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus;
+  Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus,
+  Vcl.Forms;
 
 type
   TVideoWindow = class(TCustomControl)
@@ -18,6 +19,7 @@ type
     DEF_FONTSIZE = 24;
     DEF_FONTCOLOR = clLime;
   private
+    FParentForm: TForm;
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
@@ -48,6 +50,7 @@ type
     procedure PopupSetPrintOverlayText(Sender: TObject);
     procedure UpdatePopupItems;
     procedure SetChannel(const Value: Integer);
+    function CreateParentForm: TWinControl;
   protected
     procedure Paint; override;
   public
@@ -70,13 +73,22 @@ implementation
 
 uses System.Types;
 
-
 { TWideoWindow }
 
 constructor TVideoWindow.Create(AParent: TWinControl);
+var
+  LParent: TWinControl;
 begin
-  inherited Create(AParent);
-  Parent := AParent;
+  if not Assigned(AParent) then
+    LParent := CreateParentForm
+  else
+    LParent := AParent;
+  inherited Create(LParent);
+
+  if Assigned(FParentForm) then
+    Align := alClient;
+
+  Parent := LParent;
   FUserID := -1;
   FRealHandle := -1;
   Color := DEF_COLOR;
@@ -94,6 +106,24 @@ begin
 
   RegisterObj;
   CreatePopupMenu;
+end;
+
+function TVideoWindow.CreateParentForm: TWinControl;
+begin
+  FParentForm := TForm.Create(nil);
+  FParentForm.BorderStyle := bsSizeToolWin;
+  FParentForm.BorderIcons := [];
+  FParentForm.Position := poScreenCenter;
+  FParentForm.Width := 320;
+  FParentForm.Height := 240;
+  FParentForm.FormStyle := fsStayOnTop;
+  FParentForm.Font.Name := DEF_FONTNAME;
+  FParentForm.Font.Size := DEF_FONTSIZE;
+  FParentForm.Font.Color := DEF_FONTCOLOR;
+
+  FParentForm.Visible := True;
+
+  Result := FParentForm;
 end;
 
 procedure TVideoWindow.CreatePopupMenu;
@@ -141,6 +171,7 @@ begin
   UnRegisterObj;
   FreeAndNil(FPopup);
   inherited;
+  FreeAndNil(FParentForm);
 end;
 
 class destructor TVideoWindow.Destroy;
@@ -197,6 +228,8 @@ end;
 
 procedure TVideoWindow.Paint;
 begin
+  if Assigned(FParentForm) and not FParentForm.Visible then
+    FParentForm.Show;
   inherited;
   PrintStatusCaption;
 end;

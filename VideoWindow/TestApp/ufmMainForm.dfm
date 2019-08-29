@@ -2,7 +2,7 @@ object frmMainForm: TfrmMainForm
   Left = 0
   Top = 0
   Caption = 'Video window test'
-  ClientHeight = 544
+  ClientHeight = 570
   ClientWidth = 446
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -3219,7 +3219,7 @@ object frmMainForm: TfrmMainForm
   TextHeight = 16
   object btnPlayStop: TButton
     Left = 344
-    Top = 320
+    Top = 345
     Width = 71
     Height = 25
     Caption = 'btnPlayStop'
@@ -3228,7 +3228,7 @@ object frmMainForm: TfrmMainForm
   end
   object lbledtAddress: TLabeledEdit
     Left = 32
-    Top = 280
+    Top = 305
     Width = 161
     Height = 24
     EditLabel.Width = 46
@@ -3239,7 +3239,7 @@ object frmMainForm: TfrmMainForm
   end
   object lbledtPort: TLabeledEdit
     Left = 199
-    Top = 280
+    Top = 305
     Width = 121
     Height = 24
     EditLabel.Width = 23
@@ -3251,7 +3251,7 @@ object frmMainForm: TfrmMainForm
   end
   object lbledtUser: TLabeledEdit
     Left = 32
-    Top = 320
+    Top = 345
     Width = 161
     Height = 24
     EditLabel.Width = 26
@@ -3262,7 +3262,7 @@ object frmMainForm: TfrmMainForm
   end
   object lbledtPassword: TLabeledEdit
     Left = 199
-    Top = 320
+    Top = 345
     Width = 121
     Height = 24
     EditLabel.Width = 55
@@ -3273,7 +3273,7 @@ object frmMainForm: TfrmMainForm
   end
   object lbledtChannel: TLabeledEdit
     Left = 344
-    Top = 280
+    Top = 305
     Width = 71
     Height = 24
     EditLabel.Width = 46
@@ -3285,7 +3285,7 @@ object frmMainForm: TfrmMainForm
   end
   object btnSetOverlayText: TButton
     Left = 32
-    Top = 360
+    Top = 385
     Width = 113
     Height = 25
     Caption = 'Set overlay text'
@@ -3294,7 +3294,7 @@ object frmMainForm: TfrmMainForm
   end
   object mmoText: TMemo
     Left = 32
-    Top = 391
+    Top = 416
     Width = 383
     Height = 122
     Lines.Strings = (
@@ -3310,7 +3310,7 @@ object frmMainForm: TfrmMainForm
   end
   object chkPrintText: TCheckBox
     Left = 168
-    Top = 364
+    Top = 389
     Width = 152
     Height = 17
     Caption = 'Print overlay text'
@@ -3319,7 +3319,7 @@ object frmMainForm: TfrmMainForm
   end
   object chkVisible: TCheckBox
     Left = 32
-    Top = 519
+    Top = 544
     Width = 97
     Height = 17
     Caption = 'Visible'
@@ -3342,6 +3342,25 @@ object frmMainForm: TfrmMainForm
     Font.Style = []
     ParentFont = False
     TabOrder = 10
+  end
+  object btnCreateViideoWindow: TButton
+    Left = 32
+    Top = 256
+    Width = 153
+    Height = 25
+    Caption = 'Create video window'
+    TabOrder = 11
+    OnClick = btnCreateViideoWindowClick
+  end
+  object chkBuiltIn: TCheckBox
+    Left = 199
+    Top = 260
+    Width = 97
+    Height = 17
+    Caption = 'built-in'
+    Checked = True
+    State = cbChecked
+    TabOrder = 12
   end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle

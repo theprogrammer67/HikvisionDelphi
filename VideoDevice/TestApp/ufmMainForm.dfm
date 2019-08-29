@@ -12,6 +12,8 @@ object frmMainForm: TfrmMainForm
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 120
   TextHeight = 16
   object pnlBottom: TPanel

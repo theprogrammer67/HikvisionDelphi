@@ -3,7 +3,7 @@
 interface
 
 uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
-  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes;
+  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes, uHikvisionErrors;
 
 type
   TPanelMode = (pmSingle, pm22, mt33, pm44);
@@ -51,8 +51,7 @@ type
 implementation
 
 resourcestring
-  RsErrSingletoneOnly =
-    'Допустимо использование только одного объекта TVideoPanel';
+  RsErrSingletoneOnly = 'Only one TVideoPanel object is allowed';
 
 function CallWndRetProc(nCode: Integer; wParam: wParam; lParam: lParam)
   : LRESULT; stdcall;
@@ -113,6 +112,8 @@ var
   I: Byte;
   LVideoWindow: TVideoWindow;
 begin
+  if not IsWindow(AParent) then
+    raise Exception.Create(RsErrHasNoParentWindow);
   inherited CreateParented(AParent);
 
   if Assigned(FObject) then

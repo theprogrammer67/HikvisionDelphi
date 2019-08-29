@@ -22,7 +22,10 @@ type
     chkPrintText: TCheckBox;
     chkVisible: TCheckBox;
     pnlVideo: TPanel;
+    btnCreateViideoWindow: TButton;
+    chkBuiltIn: TCheckBox;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
+    procedure btnCreateViideoWindowClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnPlayStopClick(Sender: TObject);
@@ -51,6 +54,10 @@ uses uHikvisionErrors;
 
 procedure TfrmMainForm.appev1Idle(Sender: TObject; var Done: Boolean);
 begin
+  btnPlayStop.Enabled := Assigned(FVideoWindow);
+  btnSetOverlayText.Enabled := Assigned(FVideoWindow);
+  btnCreateViideoWindow.Enabled := not Assigned(FVideoWindow);
+
   if not Assigned(FVideoWindow) then
     Exit;
 
@@ -58,6 +65,16 @@ begin
     btnPlayStop.Caption := 'Stop'
   else
     btnPlayStop.Caption := 'Play';
+end;
+
+procedure TfrmMainForm.btnCreateViideoWindowClick(Sender: TObject);
+begin
+  if chkBuiltIn.Checked then
+    FVideoWindow := TVideoWindow.Create(pnlVideo)
+  else
+    FVideoWindow := TVideoWindow.Create(nil);
+  FVideoWindow.Align := alClient;
+  FVideoWindow.Enabled := True;
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
@@ -100,10 +117,6 @@ end;
 
 procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
-  FVideoWindow := TVideoWindow.Create(pnlVideo);
-  FVideoWindow.Align := alClient;
-  FVideoWindow.Enabled := True;
-
   FSDKInited := False;
 end;
 
