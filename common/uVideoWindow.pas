@@ -3,7 +3,7 @@
 interface
 
 uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
-  Vcl.Graphics, System.SysUtils, System.Generics.Collections;
+  Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus;
 
 type
   TVideoWindow = class(TCustomControl)
@@ -19,9 +19,14 @@ type
     DEF_FONTCOLOR = clLime;
   private
     FChannel: Integer;
+    FUserID: Integer;
     FRealHandle: Integer;
     FOverlayText: string;
     FPrintOverlayText: Boolean;
+    FPopup: TPopupMenu;
+    FMenuItemChannel: TMenuItem;
+    FMenuItemPrintOverlayText: TMenuItem;
+    FMenuItemPalyStop: TMenuItem;
   private
     class var FObjects: TObjectList<TVideoWindow>;
     procedure RegisterObj;
@@ -30,22 +35,30 @@ type
     class constructor Create;
     class destructor Destroy;
   private
-    function GetIsPlaying: Boolean;
-    procedure PrintStatusCaption;
-  private
     class procedure DrawFun(lRealHandle: LongInt; hDc: IntPtr; dwUser: UINT);
       stdcall; static;
     procedure DrawFunction(hDc: IntPtr);
+  private
+    function GetIsPlaying: Boolean;
+    procedure PrintStatusCaption;
+    procedure CreatePopupMenu;
+    procedure OnPopup(Sender: TObject);
+    procedure PopupSetChannel(Sender: TObject);
+    procedure PopupPlayStop(Sender: TObject);
+    procedure PopupSetPrintOverlayText(Sender: TObject);
+    procedure UpdatePopupItems;
+    procedure SetChannel(const Value: Integer);
   protected
     procedure Paint; override;
   public
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
   public
-    procedure Play(AUserID: Integer);
+    procedure Play(AUserID: Integer); overload;
+    procedure Play; overload;
     procedure Stop;
   public
-    property Channel: Integer read FChannel write FChannel;
+    property Channel: Integer read FChannel write SetChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
     property PrintOverlayText: Boolean read FPrintOverlayText
@@ -62,9 +75,11 @@ constructor TVideoWindow.Create(AParent: TWinControl);
 begin
   inherited Create(AParent);
   Parent := AParent;
+  FUserID := -1;
   FRealHandle := -1;
   Color := DEF_COLOR;
   Enabled := False;
+  FChannel := 1;
 
   if Assigned(Parent) then
     ParentFont := True
@@ -76,6 +91,41 @@ begin
   end;
 
   RegisterObj;
+  CreatePopupMenu;
+end;
+
+procedure TVideoWindow.CreatePopupMenu;
+var
+  LSubItem: TMenuItem;
+  I: Integer;
+begin
+  FPopup := TPopupMenu.Create(Self);
+  FPopup.AutoHotkeys := maManual;
+  FPopup.OnPopup := OnPopup;
+
+  FMenuItemChannel := TMenuItem.Create(FPopup);
+  FMenuItemChannel.Caption := 'Set channel';
+  FPopup.Items.Add(FMenuItemChannel);
+
+  for I := 1 to 16 do
+  begin
+    LSubItem := TMenuItem.Create(FPopup);
+    LSubItem.Caption := 'Channel ' + IntToStr(I);
+    LSubItem.Tag := I;
+    LSubItem.OnClick := PopupSetChannel;
+    FMenuItemChannel.Add(LSubItem);
+  end;
+
+  FMenuItemPalyStop := TMenuItem.Create(FPopup);
+  FMenuItemPalyStop.OnClick := PopupPlayStop;
+  FPopup.Items.Add(FMenuItemPalyStop);
+
+  FMenuItemPrintOverlayText := TMenuItem.Create(FPopup);
+  FMenuItemPrintOverlayText.Caption := 'Print overlay text';
+  FMenuItemPrintOverlayText.OnClick := PopupSetPrintOverlayText;
+  FPopup.Items.Add(FMenuItemPrintOverlayText);
+
+  PopupMenu := FPopup;
 end;
 
 class constructor TVideoWindow.Create;
@@ -87,6 +137,7 @@ destructor TVideoWindow.Destroy;
 begin
   Stop;
   UnRegisterObj;
+  FreeAndNil(FPopup);
   inherited;
 end;
 
@@ -137,16 +188,28 @@ begin
   Result := FRealHandle >= 0;
 end;
 
+procedure TVideoWindow.OnPopup(Sender: TObject);
+begin
+  UpdatePopupItems;
+end;
+
 procedure TVideoWindow.Paint;
 begin
   inherited;
   PrintStatusCaption;
 end;
 
+procedure TVideoWindow.Play;
+begin
+  Play(FUserID);
+end;
+
 procedure TVideoWindow.Play(AUserID: Integer);
 var
   LPreviewInfo: NET_DVR_PREVIEWINFO;
 begin
+  FUserID := AUserID;
+
   ZeroMemory(@LPreviewInfo, SizeOf(LPreviewInfo));
   LPreviewInfo.hPlayWnd := Self.Handle;
   LPreviewInfo.lChannel := FChannel;
@@ -162,6 +225,24 @@ begin
     RaiseLastHVError;
   if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, 0) then
     RaiseLastHVError;
+end;
+
+procedure TVideoWindow.PopupPlayStop(Sender: TObject);
+begin
+  if IsPlaying then
+    Stop
+  else
+    Play;
+end;
+
+procedure TVideoWindow.PopupSetChannel(Sender: TObject);
+begin
+  Channel := TMenuItem(Sender).Tag;
+end;
+
+procedure TVideoWindow.PopupSetPrintOverlayText(Sender: TObject);
+begin
+  PrintOverlayText := not PrintOverlayText;
 end;
 
 procedure TVideoWindow.PrintStatusCaption;
@@ -191,6 +272,16 @@ begin
   FObjects.Add(Self);
 end;
 
+procedure TVideoWindow.SetChannel(const Value: Integer);
+begin
+  FChannel := Value;
+  if IsPlaying then
+  begin
+    Stop;
+    Play;
+  end;
+end;
+
 procedure TVideoWindow.Stop;
 begin
   if FRealHandle >= 0 then
@@ -202,6 +293,22 @@ end;
 procedure TVideoWindow.UnRegisterObj;
 begin
   FObjects.Remove(Self);
+end;
+
+procedure TVideoWindow.UpdatePopupItems;
+var
+  I: Integer;
+begin
+  for I := 1 to FMenuItemChannel.Count do
+    FMenuItemChannel.Items[I - 1].Checked := FChannel = FMenuItemChannel.Items
+      [I - 1].Tag;
+
+  if IsPlaying then
+    FMenuItemPalyStop.Caption := 'Stop'
+  else
+    FMenuItemPalyStop.Caption := 'Play';
+
+  FMenuItemPrintOverlayText.Checked := FPrintOverlayText;
 end;
 
 end.
