@@ -17,6 +17,7 @@ type
     FAddress: string;
     FLogin: string;
     procedure Authorize;
+    procedure SetEnabled(const Value: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
@@ -26,7 +27,7 @@ type
   public
   public
     property ParentWnd: HWND read FParentWnd write FParentWnd;
-    property Enabled: Boolean read FEnabled write FEnabled;
+    property Enabled: Boolean read FEnabled write SetEnabled;
     property VideoPanel: TVideoPanel read FVideoPanel write FVideoPanel;
     property Address: string read FAddress write FAddress;
     property Port: Integer read FPort write FPort;
@@ -74,6 +75,8 @@ end;
 
 procedure TVideoDevice.Disable;
 begin
+  FEnabled := False;
+
   if Assigned(FVideoPanel) then
   begin
     FVideoPanel.StopAll;
@@ -92,10 +95,17 @@ begin
     FVideoPanel := TVideoPanel.Create(FParentWnd);
     Authorize;
     FVideoPanel.Show;
+
+    FEnabled := True;
   except
     Disable;
     raise;
   end;
+end;
+
+procedure TVideoDevice.SetEnabled(const Value: Boolean);
+begin
+  Enable;
 end;
 
 end.

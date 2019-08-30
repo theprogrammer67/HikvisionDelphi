@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, uVideoDevice,
-  Vcl.StdCtrls, uVideoPanel;
+  Vcl.StdCtrls, uVideoPanel, uVideoWindow, Vcl.AppEvnts;
 
 type
   TfrmMainForm = class(TForm)
@@ -21,14 +21,31 @@ type
     lbledtPort: TLabeledEdit;
     lbledtUser: TLabeledEdit;
     lbledtPassword: TLabeledEdit;
-    btnAuthorize: TButton;
+    cbbWIndow: TComboBox;
+    lbledtChannel: TLabeledEdit;
+    chkPrintText: TCheckBox;
+    chkVisible: TCheckBox;
+    chkEnable: TCheckBox;
+    mmoText: TMemo;
+    btnApply: TButton;
+    appev1: TApplicationEvents;
+    btnPlayAll: TButton;
+    btnStopAll: TButton;
+    procedure appev1Idle(Sender: TObject; var Done: Boolean);
+    procedure btnApplyClick(Sender: TObject);
     procedure btnDisableClick(Sender: TObject);
     procedure btnEnableClick(Sender: TObject);
+    procedure btnPlayAllClick(Sender: TObject);
+    procedure btnStopAllClick(Sender: TObject);
     procedure cbbModeChange(Sender: TObject);
+    procedure cbbWIndowChange(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
     FVideoDevice: TVideoDevice;
+  private
+    procedure UpdateWindowControls;
+    procedure UpdateWindowSettings;
   public
     { Public declarations }
   end;
@@ -39,6 +56,18 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TfrmMainForm.appev1Idle(Sender: TObject; var Done: Boolean);
+begin
+  pnlRight.Enabled := FVideoDevice.Enabled;
+  btnPlayAll.Enabled := FVideoDevice.Enabled;
+  btnStopAll.Enabled := FVideoDevice.Enabled;
+end;
+
+procedure TfrmMainForm.btnApplyClick(Sender: TObject);
+begin
+  UpdateWindowSettings;
+end;
 
 procedure TfrmMainForm.btnDisableClick(Sender: TObject);
 begin
@@ -52,8 +81,24 @@ begin
   else
     FVideoDevice.ParentWnd := 0;
 
+  FVideoDevice.Address := lbledtAddress.Text;
+  FVideoDevice.Port := StrToInt(lbledtPort.Text);
+  FVideoDevice.Login := lbledtUser.Text;
+  FVideoDevice.Password := lbledtPassword.Text;
   FVideoDevice.Enable;
   FVideoDevice.VideoPanel.PanelMode := TPanelMode(cbbMode.ItemIndex);
+
+  UpdateWindowControls;
+end;
+
+procedure TfrmMainForm.btnPlayAllClick(Sender: TObject);
+begin
+  FVideoDevice.VideoPanel.PlayAll;
+end;
+
+procedure TfrmMainForm.btnStopAllClick(Sender: TObject);
+begin
+  FVideoDevice.VideoPanel.StopAll;
 end;
 
 procedure TfrmMainForm.cbbModeChange(Sender: TObject);
@@ -62,10 +107,41 @@ begin
     FVideoDevice.VideoPanel.PanelMode := TPanelMode(cbbMode.ItemIndex);
 end;
 
+procedure TfrmMainForm.cbbWIndowChange(Sender: TObject);
+begin
+  UpdateWindowControls;
+end;
+
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
 begin
   FVideoDevice.Disable;
   FreeAndNil(FVideoDevice);
+end;
+
+procedure TfrmMainForm.UpdateWindowControls;
+var
+  LVideoWindow: TVideoWindow;
+begin
+  LVideoWindow := FVideoDevice.VideoPanel.VideoWindows[cbbWIndow.ItemIndex];
+
+  lbledtChannel.Text := IntToStr(LVideoWindow.Channel);
+  chkPrintText.Checked := LVideoWindow.PrintOverlayText;
+  chkEnable.Checked := LVideoWindow.Enabled;
+  chkVisible.Checked := LVideoWindow.Visible;
+end;
+
+procedure TfrmMainForm.UpdateWindowSettings;
+var
+  LVideoWindow: TVideoWindow;
+begin
+  LVideoWindow := FVideoDevice.VideoPanel.VideoWindows[cbbWIndow.ItemIndex];
+
+  LVideoWindow.Channel := StrToInt(lbledtChannel.Text);
+  LVideoWindow.PrintOverlayText := chkPrintText.Checked;
+  LVideoWindow.Enabled := chkEnable.Checked;
+  LVideoWindow.Visible := chkVisible.Checked;
+  LVideoWindow.OverlayText := mmoText.Text;
+  LVideoWindow.Invalidate;
 end;
 
 procedure TfrmMainForm.FormCreate(Sender: TObject);
