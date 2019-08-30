@@ -135,7 +135,7 @@ begin
   end;
 
   UserID := -1;
-  Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
+//  Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
   InstallHookParent;
 end;

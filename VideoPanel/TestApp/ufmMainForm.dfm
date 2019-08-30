@@ -14,6 +14,7 @@ object frmMainForm: TfrmMainForm
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 16
   object pnlControls: TPanel

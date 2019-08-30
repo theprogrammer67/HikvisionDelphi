@@ -75,6 +75,7 @@ begin
     FVideoWindow := TVideoWindow.Create(nil);
   FVideoWindow.Align := alClient;
   FVideoWindow.Enabled := True;
+  FVideoWindow.Show;
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);

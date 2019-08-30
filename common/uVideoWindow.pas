@@ -20,6 +20,7 @@ type
     constructor Create(AParent: HWND); reintroduce; overload; virtual;
     constructor Create(AParent: TWinControl); reintroduce; overload;
     destructor Destroy; override;
+    procedure Show;
   end;
 
   TVideoWindow = class(TSelfParentControl)
@@ -65,7 +66,6 @@ type
     procedure PopupSetPrintOverlayText(Sender: TObject);
     procedure UpdatePopupItems;
     procedure SetChannel(const Value: Integer);
-    // function CreateParentForm: TWinControl;
   protected
     procedure Paint; override;
   public
@@ -91,20 +91,8 @@ uses System.Types;
 { TWideoWindow }
 
 constructor TVideoWindow.Create(AParent: TWinControl);
-// var
-// LParent: TWinControl;
 begin
-  // if not Assigned(AParent) then
-  // LParent := CreateParentForm
-  // else
-  // LParent := AParent;
   inherited Create(AParent);
-
-  // if Assigned(FParentForm) then
-  // Align := alClient;
-
-  // if not Assigned(FParentForm) then
-  // Parent := AParent;
 
   FUserID := -1;
   FRealHandle := -1;
@@ -124,24 +112,6 @@ begin
   RegisterObj;
   CreatePopupMenu;
 end;
-
-// function TVideoWindow.CreateParentForm: TWinControl;
-// begin
-// FParentForm := TForm.Create(nil);
-// FParentForm.BorderStyle := bsSizeToolWin;
-// FParentForm.BorderIcons := [];
-// FParentForm.Position := poScreenCenter;
-// FParentForm.Width := 320;
-// FParentForm.Height := 240;
-// FParentForm.FormStyle := fsStayOnTop;
-// FParentForm.Font.Name := DEF_FONTNAME;
-// FParentForm.Font.Size := DEF_FONTSIZE;
-// FParentForm.Font.Color := DEF_FONTCOLOR;
-//
-// FParentForm.Visible := True;
-//
-// Result := FParentForm;
-// end;
 
 procedure TVideoWindow.CreatePopupMenu;
 var
@@ -245,8 +215,8 @@ end;
 
 procedure TVideoWindow.Paint;
 begin
-  if Assigned(FParentForm) and not FParentForm.Visible then
-    FParentForm.Show;
+//  if Assigned(FParentForm) and not FParentForm.Visible then
+//    FParentForm.Show;
   inherited;
   PrintStatusCaption;
 end;
@@ -409,7 +379,6 @@ begin
   FParentForm.Width := 320;
   FParentForm.Height := 240;
 
-  FParentForm.Visible := True;
   Result := FParentForm;
 end;
 
@@ -418,6 +387,14 @@ begin
 
   inherited;
   FreeAndNil(FParentForm);
+end;
+
+procedure TSelfParentControl.Show;
+begin
+  if Assigned(FParentForm) then
+    FParentForm.Visible := True;
+
+  Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 end;
 
 end.

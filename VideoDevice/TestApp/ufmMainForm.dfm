@@ -67,6 +67,59 @@ object frmMainForm: TfrmMainForm
         '3 * 3'
         '4 * 4')
     end
+    object lbledtAddress: TLabeledEdit
+      Left = 328
+      Top = 32
+      Width = 161
+      Height = 24
+      EditLabel.Width = 46
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Address'
+      TabOrder = 4
+      Text = '172.20.162.43'
+    end
+    object lbledtPort: TLabeledEdit
+      Left = 495
+      Top = 32
+      Width = 121
+      Height = 24
+      EditLabel.Width = 23
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Port'
+      NumbersOnly = True
+      TabOrder = 5
+      Text = '8000'
+    end
+    object lbledtUser: TLabeledEdit
+      Left = 328
+      Top = 75
+      Width = 161
+      Height = 24
+      EditLabel.Width = 26
+      EditLabel.Height = 16
+      EditLabel.Caption = 'User'
+      TabOrder = 6
+      Text = 'admin'
+    end
+    object lbledtPassword: TLabeledEdit
+      Left = 495
+      Top = 75
+      Width = 121
+      Height = 24
+      EditLabel.Width = 55
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Password'
+      TabOrder = 7
+      Text = 'admin12345'
+    end
+    object btnAuthorize: TButton
+      Left = 648
+      Top = 74
+      Width = 137
+      Height = 25
+      Caption = 'Authorize user'
+      TabOrder = 8
+    end
   end
   object pnlRight: TPanel
     Left = 624

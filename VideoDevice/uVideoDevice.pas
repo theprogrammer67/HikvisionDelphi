@@ -11,6 +11,12 @@ type
     FVideoPanel: TVideoPanel;
     FEnabled: Boolean;
     FParentWnd: HWND;
+  private
+    FPort: Integer;
+    FPassword: string;
+    FAddress: string;
+    FLogin: string;
+    procedure Authorize;
   public
     constructor Create;
     destructor Destroy; override;
@@ -18,17 +24,46 @@ type
     procedure Enable;
     procedure Disable;
   public
+  public
     property ParentWnd: HWND read FParentWnd write FParentWnd;
     property Enabled: Boolean read FEnabled write FEnabled;
     property VideoPanel: TVideoPanel read FVideoPanel write FVideoPanel;
+    property Address: string read FAddress write FAddress;
+    property Port: Integer read FPort write FPort;
+    property Login: string read FLogin write FLogin;
+    property Password: string read FPassword write FPassword;
   end;
 
 implementation
 
-{ TVideoDevice }
+resourcestring
+  RsErrEmptyAddress = 'IP addres is empty';
+  RsErrUserEmpty = 'User name is empty';
+
+  { TVideoDevice }
+
+procedure TVideoDevice.Authorize;
+var
+  LDeviceInfo: NET_DVR_DEVICEINFO_V30;
+begin
+  if FAddress = '' then
+    raise Exception.Create(RsErrEmptyAddress);
+  if FLogin = '' then
+    raise Exception.Create(RsErrUserEmpty);
+
+  FVideoPanel.StopAll;
+
+  ZeroMemory(@LDeviceInfo, SizeOf(LDeviceInfo));
+  FVideoPanel.UserID := NET_DVR_Login_V30(PAnsiChar(AnsiString(FAddress)),
+    FPort, PAnsiChar(AnsiString(FLogin)), PAnsiChar(AnsiString(FPassword)),
+    LDeviceInfo);
+  if FVideoPanel.UserID < 0 then
+    RaiseLastHVError;
+end;
 
 constructor TVideoDevice.Create;
 begin
+  FPort := 8000;
 end;
 
 destructor TVideoDevice.Destroy;
@@ -40,14 +75,27 @@ end;
 procedure TVideoDevice.Disable;
 begin
   if Assigned(FVideoPanel) then
+  begin
     FVideoPanel.StopAll;
+    if FVideoPanel.UserID >= 0 then
+      NET_DVR_Logout(FVideoPanel.UserID);
+  end;
   FreeAndNil(FVideoPanel);
+  NET_DVR_Cleanup;
 end;
 
 procedure TVideoDevice.Enable;
 begin
   Disable;
-  FVideoPanel := TVideoPanel.Create(FParentWnd);
+  try
+    NET_DVR_Init;
+    FVideoPanel := TVideoPanel.Create(FParentWnd);
+    Authorize;
+    FVideoPanel.Show;
+  except
+    Disable;
+    raise;
+  end;
 end;
 
 end.

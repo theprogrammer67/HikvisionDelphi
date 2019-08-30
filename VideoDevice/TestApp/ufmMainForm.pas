@@ -17,6 +17,11 @@ type
     btnDisable: TButton;
     chkBuiltin: TCheckBox;
     cbbMode: TComboBox;
+    lbledtAddress: TLabeledEdit;
+    lbledtPort: TLabeledEdit;
+    lbledtUser: TLabeledEdit;
+    lbledtPassword: TLabeledEdit;
+    btnAuthorize: TButton;
     procedure btnDisableClick(Sender: TObject);
     procedure btnEnableClick(Sender: TObject);
     procedure cbbModeChange(Sender: TObject);

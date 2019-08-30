@@ -44,6 +44,7 @@ type
     procedure cbbWIndowChange(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure tsSettingsShow(Sender: TObject);
   private
     FVideoPanel: TVideoPanel;
@@ -152,6 +153,11 @@ begin
 
   pgcPages.ActivePage := tsVideo;
   NET_DVR_Init;
+end;
+
+procedure TfrmMainForm.FormShow(Sender: TObject);
+begin
+  FVideoPanel.Show;
 end;
 
 procedure TfrmMainForm.OnLoseParentWindow(ASender: TObject);
