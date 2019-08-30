@@ -146,7 +146,8 @@ end;
 
 procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
-  FVideoPanel := TVideoPanel.Create(pnlVideo.Handle);
+//  FVideoPanel := TVideoPanel.Create(0); // "Отвязанная" панель
+  FVideoPanel := TVideoPanel.Create(pnlVideo.Handle); // "Привязанная" панель
   FVideoPanel.OnLoseParentWindow := OnLoseParentWindow;
 
   pgcPages.ActivePage := tsVideo;

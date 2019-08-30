@@ -7,7 +7,22 @@ uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
   Vcl.Forms;
 
 type
-  TVideoWindow = class(TCustomControl)
+  TSelfParentControl = class(TCustomControl)
+  private const
+    DEF_FONTNAME = 'Courier New';
+    DEF_FONTSIZE = 24;
+    DEF_FONTCOLOR = clLime;
+  protected
+    FParentForm: TForm;
+  private
+    function CreateParentForm: TWinControl;
+  public
+    constructor Create(AParent: HWND); reintroduce; overload; virtual;
+    constructor Create(AParent: TWinControl); reintroduce; overload;
+    destructor Destroy; override;
+  end;
+
+  TVideoWindow = class(TSelfParentControl)
   private const
     CAPTION_DISABLED: string = 'DISABLED';
     CAPTION_STOPPED: string = 'VIDEO STOPPED';
@@ -19,7 +34,7 @@ type
     DEF_FONTSIZE = 24;
     DEF_FONTCOLOR = clLime;
   private
-    FParentForm: TForm;
+    // FParentForm: TForm;
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
@@ -50,7 +65,7 @@ type
     procedure PopupSetPrintOverlayText(Sender: TObject);
     procedure UpdatePopupItems;
     procedure SetChannel(const Value: Integer);
-    function CreateParentForm: TWinControl;
+    // function CreateParentForm: TWinControl;
   protected
     procedure Paint; override;
   public
@@ -76,19 +91,21 @@ uses System.Types;
 { TWideoWindow }
 
 constructor TVideoWindow.Create(AParent: TWinControl);
-var
-  LParent: TWinControl;
+// var
+// LParent: TWinControl;
 begin
-  if not Assigned(AParent) then
-    LParent := CreateParentForm
-  else
-    LParent := AParent;
-  inherited Create(LParent);
+  // if not Assigned(AParent) then
+  // LParent := CreateParentForm
+  // else
+  // LParent := AParent;
+  inherited Create(AParent);
 
-  if Assigned(FParentForm) then
-    Align := alClient;
+  // if Assigned(FParentForm) then
+  // Align := alClient;
 
-  Parent := LParent;
+  // if not Assigned(FParentForm) then
+  // Parent := AParent;
+
   FUserID := -1;
   FRealHandle := -1;
   Color := DEF_COLOR;
@@ -108,23 +125,23 @@ begin
   CreatePopupMenu;
 end;
 
-function TVideoWindow.CreateParentForm: TWinControl;
-begin
-  FParentForm := TForm.Create(nil);
-  FParentForm.BorderStyle := bsSizeToolWin;
-  FParentForm.BorderIcons := [];
-  FParentForm.Position := poScreenCenter;
-  FParentForm.Width := 320;
-  FParentForm.Height := 240;
-  FParentForm.FormStyle := fsStayOnTop;
-  FParentForm.Font.Name := DEF_FONTNAME;
-  FParentForm.Font.Size := DEF_FONTSIZE;
-  FParentForm.Font.Color := DEF_FONTCOLOR;
-
-  FParentForm.Visible := True;
-
-  Result := FParentForm;
-end;
+// function TVideoWindow.CreateParentForm: TWinControl;
+// begin
+// FParentForm := TForm.Create(nil);
+// FParentForm.BorderStyle := bsSizeToolWin;
+// FParentForm.BorderIcons := [];
+// FParentForm.Position := poScreenCenter;
+// FParentForm.Width := 320;
+// FParentForm.Height := 240;
+// FParentForm.FormStyle := fsStayOnTop;
+// FParentForm.Font.Name := DEF_FONTNAME;
+// FParentForm.Font.Size := DEF_FONTSIZE;
+// FParentForm.Font.Color := DEF_FONTCOLOR;
+//
+// FParentForm.Visible := True;
+//
+// Result := FParentForm;
+// end;
 
 procedure TVideoWindow.CreatePopupMenu;
 var
@@ -347,6 +364,60 @@ begin
     FMenuItemPalyStop.Caption := 'Play';
 
   FMenuItemPrintOverlayText.Checked := FPrintOverlayText;
+end;
+
+{ TSelfParentControl }
+
+constructor TSelfParentControl.Create(AParent: HWND);
+var
+  LParent: HWND;
+begin
+  if (AParent = 0) or not IsWindow(AParent) then
+    LParent := CreateParentForm.Handle
+  else
+    LParent := AParent;
+  inherited CreateParented(LParent);
+
+  if Assigned(FParentForm) then
+  begin
+    Parent := FParentForm;
+    Align := alClient;
+  end;
+end;
+
+constructor TSelfParentControl.Create(AParent: TWinControl);
+begin
+  if Assigned(AParent) then
+  begin
+    Create(AParent.Handle);
+    Parent := AParent;
+  end
+  else
+    Create(0);
+end;
+
+function TSelfParentControl.CreateParentForm: TWinControl;
+begin
+  FParentForm := TForm.Create(nil);
+  FParentForm.BorderStyle := bsSizeToolWin;
+  FParentForm.BorderIcons := [];
+  FParentForm.Position := poScreenCenter;
+  FParentForm.FormStyle := fsStayOnTop;
+  FParentForm.Font.Name := DEF_FONTNAME;
+  FParentForm.Font.Size := DEF_FONTSIZE;
+  FParentForm.Font.Color := DEF_FONTCOLOR;
+  FParentForm.Width := 320;
+  FParentForm.Height := 240;
+
+  FParentForm.Visible := True;
+  Result := FParentForm;
+end;
+
+destructor TSelfParentControl.Destroy;
+begin
+
+  inherited;
+  FreeAndNil(FParentForm);
 end;
 
 end.

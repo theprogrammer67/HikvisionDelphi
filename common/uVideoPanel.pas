@@ -8,7 +8,7 @@ uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
 type
   TPanelMode = (pmSingle, pm22, mt33, pm44);
 
-  TVideoPanel = class(TCustomControl)
+  TVideoPanel = class(TSelfParentControl)
   private const
     WIN_COUNT: Byte = 16;
     DEF_COLOR = clSilver;
@@ -33,7 +33,7 @@ type
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
   public
-    constructor Create(AParent: HWND); reintroduce;
+    constructor Create(AParent: HWND); override;
     destructor Destroy; override;
   public
     procedure PlayAll(AUserID: Integer); overload;
@@ -112,9 +112,7 @@ var
   I: Byte;
   LVideoWindow: TVideoWindow;
 begin
-  if not IsWindow(AParent) then
-    raise Exception.Create(RsErrHasNoParentWindow);
-  inherited CreateParented(AParent);
+  inherited Create(AParent);
 
   if Assigned(FObject) then
     raise Exception.Create(RsErrSingletoneOnly);
@@ -186,6 +184,9 @@ var
   LRatio: Byte;
   LCount, LHeight, LWidth, I, XNum, YNum: Integer;
 begin
+  if not Assigned(FVideoWindows) then
+    Exit;
+
   Visible := False;
   try
     LRatio := Ord(FPanelMode) + 1;

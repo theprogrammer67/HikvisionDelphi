@@ -2,7 +2,7 @@ object frmMainForm: TfrmMainForm
   Left = 0
   Top = 0
   Caption = 'Video device test'
-  ClientHeight = 534
+  ClientHeight = 567
   ClientWidth = 831
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,33 +18,72 @@ object frmMainForm: TfrmMainForm
   TextHeight = 16
   object pnlBottom: TPanel
     Left = 0
-    Top = 464
+    Top = 448
     Width = 831
-    Height = 70
+    Height = 119
     Align = alBottom
-    Caption = 'pnlBottom'
     TabOrder = 0
+    ExplicitLeft = 8
+    ExplicitTop = 440
+    object btnEnable: TButton
+      Left = 24
+      Top = 72
+      Width = 75
+      Height = 25
+      Caption = 'Enable'
+      TabOrder = 0
+      OnClick = btnEnableClick
+    end
+    object btnDisable: TButton
+      Left = 105
+      Top = 72
+      Width = 75
+      Height = 25
+      Caption = 'Disable'
+      TabOrder = 1
+      OnClick = btnDisableClick
+    end
+    object chkBuiltin: TCheckBox
+      Left = 24
+      Top = 32
+      Width = 97
+      Height = 17
+      Caption = 'Builtin'
+      TabOrder = 2
+    end
+    object cbbMode: TComboBox
+      Left = 105
+      Top = 28
+      Width = 120
+      Height = 24
+      Style = csDropDownList
+      ItemIndex = 0
+      TabOrder = 3
+      Text = 'Single'
+      OnChange = cbbModeChange
+      Items.Strings = (
+        'Single'
+        '2 * 2'
+        '3 * 3'
+        '4 * 4')
+    end
   end
   object pnlRight: TPanel
     Left = 624
     Top = 0
     Width = 207
-    Height = 464
+    Height = 448
     Align = alRight
-    Caption = 'pnlRight'
     TabOrder = 1
+    ExplicitHeight = 464
   end
   object pnlVideo: TPanel
     Left = 0
     Top = 0
     Width = 624
-    Height = 464
+    Height = 448
     Align = alClient
-    Caption = 'pnlVideo'
     TabOrder = 2
-    ExplicitLeft = 248
-    ExplicitTop = 80
-    ExplicitWidth = 185
-    ExplicitHeight = 41
+    ExplicitHeight = 464
   end
 end
