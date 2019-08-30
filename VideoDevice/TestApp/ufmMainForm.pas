@@ -31,10 +31,14 @@ type
     appev1: TApplicationEvents;
     btnPlayAll: TButton;
     btnStopAll: TButton;
+    btnEnableWindows: TButton;
+    btnDisableWindows: TButton;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
     procedure btnApplyClick(Sender: TObject);
     procedure btnDisableClick(Sender: TObject);
+    procedure btnDisableWindowsClick(Sender: TObject);
     procedure btnEnableClick(Sender: TObject);
+    procedure btnEnableWindowsClick(Sender: TObject);
     procedure btnPlayAllClick(Sender: TObject);
     procedure btnStopAllClick(Sender: TObject);
     procedure cbbModeChange(Sender: TObject);
@@ -62,6 +66,8 @@ begin
   pnlRight.Enabled := FVideoDevice.Enabled;
   btnPlayAll.Enabled := FVideoDevice.Enabled;
   btnStopAll.Enabled := FVideoDevice.Enabled;
+  btnEnableWindows.Enabled := FVideoDevice.Enabled;
+  btnDisableWindows.Enabled := FVideoDevice.Enabled;
 end;
 
 procedure TfrmMainForm.btnApplyClick(Sender: TObject);
@@ -72,6 +78,12 @@ end;
 procedure TfrmMainForm.btnDisableClick(Sender: TObject);
 begin
   FVideoDevice.Disable;
+end;
+
+procedure TfrmMainForm.btnDisableWindowsClick(Sender: TObject);
+begin
+  FVideoDevice.VideoPanel.DisableAll;
+  UpdateWindowControls;
 end;
 
 procedure TfrmMainForm.btnEnableClick(Sender: TObject);
@@ -88,6 +100,12 @@ begin
   FVideoDevice.Enable;
   FVideoDevice.VideoPanel.PanelMode := TPanelMode(cbbMode.ItemIndex);
 
+  UpdateWindowControls;
+end;
+
+procedure TfrmMainForm.btnEnableWindowsClick(Sender: TObject);
+begin
+  FVideoDevice.VideoPanel.EnableAll;
   UpdateWindowControls;
 end;
 

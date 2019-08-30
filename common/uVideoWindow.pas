@@ -4,7 +4,11 @@ interface
 
 uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
   Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus,
-  Vcl.Forms;
+  Vcl.Forms, Winapi.Messages;
+
+const
+  WM_PLAYVIDEO = WM_USER + 0;
+  WM_STOPVIDEO = WM_USER + 1;
 
 type
   TSelfParentControl = class(TCustomControl)
@@ -28,6 +32,8 @@ type
     CAPTION_DISABLED: string = 'DISABLED';
     CAPTION_STOPPED: string = 'VIDEO STOPPED';
     DEF_COLOR = clNavy;
+    ERROR_FONTCOLOR = clYellow;
+    ERROR_FONTSIZE = 10;
     STATUS_FONTCOLOR = $00FF96A0;
     STATUS_FONTNAME = 'Impact';
     STATUS_FONTSIZE = 24;
@@ -45,6 +51,7 @@ type
     FMenuItemChannel: TMenuItem;
     FMenuItemPrintOverlayText: TMenuItem;
     FMenuItemPalyStop: TMenuItem;
+    FLastErrorDecription: string;
   private
     class var FObjects: TObjectList<TVideoWindow>;
     procedure RegisterObj;
@@ -57,7 +64,12 @@ type
       stdcall; static;
     procedure DrawFunction(hDc: IntPtr);
   private
+    procedure OnPlayVideoMessage(var Msg: TMessage); message WM_PLAYVIDEO;
+    procedure OnStopVideoMessage(var Msg: TMessage); message WM_STOPVIDEO;
+  private
+    procedure ClearError;
     function GetIsPlaying: Boolean;
+    procedure PrintErrorDescription;
     procedure PrintStatusCaption;
     procedure CreatePopupMenu;
     procedure OnPopup(Sender: TObject);
@@ -89,6 +101,11 @@ implementation
 uses System.Types;
 
 { TWideoWindow }
+
+procedure TVideoWindow.ClearError;
+begin
+  FLastErrorDecription := '';
+end;
 
 constructor TVideoWindow.Create(AParent: TWinControl);
 begin
@@ -170,13 +187,17 @@ class procedure TVideoWindow.DrawFun(lRealHandle: Integer; hDc: IntPtr;
   dwUser: UINT);
 var
   LObj: TVideoWindow;
+  I: Integer;
 begin
-  for LObj in FObjects do
+  for I := 0 to FObjects.Count - 1 do
+  begin
+    LObj := FObjects[I];
     if LObj.FRealHandle = lRealHandle then
     begin
       LObj.DrawFunction(hDc);
       Break;
     end;
+  end;
 end;
 
 procedure TVideoWindow.DrawFunction(hDc: IntPtr);
@@ -208,15 +229,35 @@ begin
   Result := FRealHandle >= 0;
 end;
 
+procedure TVideoWindow.OnPlayVideoMessage(var Msg: TMessage);
+begin
+  try
+    Play;
+  except
+    FLastErrorDecription := Exception(ExceptObject).Message;
+    PrintErrorDescription;
+  end;
+end;
+
 procedure TVideoWindow.OnPopup(Sender: TObject);
 begin
   UpdatePopupItems;
 end;
 
+procedure TVideoWindow.OnStopVideoMessage(var Msg: TMessage);
+begin
+  try
+    Stop;
+  except
+    FLastErrorDecription := Exception(ExceptObject).Message;
+    PrintErrorDescription;
+  end;
+end;
+
 procedure TVideoWindow.Paint;
 begin
-//  if Assigned(FParentForm) and not FParentForm.Visible then
-//    FParentForm.Show;
+  // if Assigned(FParentForm) and not FParentForm.Visible then
+  // FParentForm.Show;
   inherited;
   PrintStatusCaption;
 end;
@@ -231,6 +272,7 @@ var
   LPreviewInfo: NET_DVR_PREVIEWINFO;
 begin
   Stop;
+  ClearError;
   if AUserID < 0 then
     raise Exception.Create(RsErrUserNotAuthorized);
 
@@ -271,11 +313,30 @@ begin
   PrintOverlayText := not PrintOverlayText;
 end;
 
-procedure TVideoWindow.PrintStatusCaption;
+procedure TVideoWindow.PrintErrorDescription;
 var
   LRect: TRect;
-  LText: string;
 begin
+  if FLastErrorDecription = '' then
+    Exit;
+
+  Canvas.Font.Size := ERROR_FONTSIZE;
+  Canvas.Font.Name := DEF_FONTNAME;
+  Canvas.Font.Color := ERROR_FONTCOLOR;
+  Canvas.Brush.Style := bsClear;
+
+  LRect := ClientRect;
+  DrawText(Canvas.Handle, FLastErrorDecription, Length(FLastErrorDecription),
+    LRect, DT_WORDBREAK or DT_LEFT or DT_TOP);
+end;
+
+procedure TVideoWindow.PrintStatusCaption;
+var
+  LText: string;
+  LRect: TRect;
+begin
+  PrintErrorDescription;
+
   if not Enabled then
     LText := CAPTION_DISABLED
   else if not IsPlaying then
@@ -288,7 +349,7 @@ begin
   Canvas.Font.Color := STATUS_FONTCOLOR;
   Canvas.Brush.Style := bsClear;
 
-  LRect := Rect(0, 0, Width, Height);
+  LRect := ClientRect;
   DrawText(Canvas.Handle, LText, Length(LText), LRect, DT_SINGLELINE or
     DT_CENTER or DT_VCENTER);
 end;
@@ -310,6 +371,7 @@ end;
 
 procedure TVideoWindow.Stop;
 begin
+  ClearError;
   if FRealHandle >= 0 then
     NET_DVR_StopRealPlay(FRealHandle);
   FRealHandle := -1;

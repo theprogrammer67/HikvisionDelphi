@@ -3,7 +3,8 @@
 interface
 
 uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
-  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes, uHikvisionErrors;
+  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes,
+  uHikvisionErrors;
 
 type
   TPanelMode = (pmSingle, pm22, mt33, pm44);
@@ -36,6 +37,8 @@ type
     constructor Create(AParent: HWND); override;
     destructor Destroy; override;
   public
+    procedure EnableAll;
+    procedure DisableAll;
     procedure PlayAll(AUserID: Integer); overload;
     procedure PlayAll; overload;
     procedure StopAll;
@@ -135,7 +138,7 @@ begin
   end;
 
   UserID := -1;
-//  Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
+  // Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
   InstallHookParent;
 end;
@@ -148,10 +151,28 @@ begin
   inherited;
 end;
 
+procedure TVideoPanel.DisableAll;
+var
+  LVideoWindow: TVideoWindow;
+begin
+  for LVideoWindow in VideoWindows do
+    LVideoWindow.Enabled := False;
+  Invalidate;
+end;
+
 procedure TVideoPanel.DoLoseParentWindow;
 begin
   if Assigned(OnLoseParentWindow) then
     OnLoseParentWindow(Self);
+end;
+
+procedure TVideoPanel.EnableAll;
+var
+  LVideoWindow: TVideoWindow;
+begin
+  for LVideoWindow in VideoWindows do
+    LVideoWindow.Enabled := True;
+  Invalidate;
 end;
 
 procedure TVideoPanel.InstallHookParent;
@@ -175,7 +196,8 @@ begin
   UserID := AUserID;
   for LVideoWindow in VideoWindows do
     if LVideoWindow.Enabled then
-      LVideoWindow.Play;
+      PostMessage(LVideoWindow.Handle, WM_PLAYVIDEO, 0, 0);
+  Invalidate;
 end;
 
 procedure TVideoPanel.RecalcVideoWindows;
@@ -238,7 +260,8 @@ var
   LVideoWindow: TVideoWindow;
 begin
   for LVideoWindow in VideoWindows do
-    LVideoWindow.Stop;
+    PostMessage(LVideoWindow.Handle, WM_STOPVIDEO, 0, 0);
+  Invalidate;
 end;
 
 procedure TVideoPanel.UninstallHookParent;

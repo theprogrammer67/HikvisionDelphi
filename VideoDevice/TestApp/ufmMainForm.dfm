@@ -147,6 +147,26 @@ object frmMainForm: TfrmMainForm
       TabOrder = 9
       OnClick = btnStopAllClick
     end
+    object btnEnableWindows: TButton
+      Left = 400
+      Top = 27
+      Width = 137
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Enable all windows'
+      TabOrder = 10
+      OnClick = btnEnableWindowsClick
+    end
+    object btnDisableWindows: TButton
+      Left = 400
+      Top = 72
+      Width = 137
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Disable all windows'
+      TabOrder = 11
+      OnClick = btnDisableWindowsClick
+    end
   end
   object pnlRight: TPanel
     Left = 608
