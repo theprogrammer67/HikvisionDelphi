@@ -53,7 +53,7 @@ type
     FMenuItemPalyStop: TMenuItem;
     FLastErrorDecription: string;
   private
-    class var FObjects: TObjectList<TVideoWindow>;
+    class var FObjects: TThreadList<TVideoWindow>;
     procedure RegisterObj;
     procedure UnRegisterObj;
   public
@@ -166,7 +166,7 @@ end;
 
 class constructor TVideoWindow.Create;
 begin
-  FObjects := TObjectList<TVideoWindow>.Create(False);
+  FObjects := TThreadList<TVideoWindow>.Create;
 end;
 
 destructor TVideoWindow.Destroy;
@@ -188,15 +188,21 @@ class procedure TVideoWindow.DrawFun(lRealHandle: Integer; hDc: IntPtr;
 var
   LObj: TVideoWindow;
   I: Integer;
+  LObjects: TList<TVideoWindow>;
 begin
-  for I := 0 to FObjects.Count - 1 do
-  begin
-    LObj := FObjects[I];
-    if LObj.FRealHandle = lRealHandle then
+  LObjects := FObjects.LockList;
+  try
+    for I := 0 to LObjects.Count - 1 do
     begin
-      LObj.DrawFunction(hDc);
-      Break;
+      LObj := LObjects[I];
+      if LObj.FRealHandle = lRealHandle then
+      begin
+        LObj.DrawFunction(hDc);
+        Break;
+      end;
     end;
+  finally
+    FObjects.UnlockList;
   end;
 end;
 
