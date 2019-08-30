@@ -230,6 +230,7 @@ procedure TVideoWindow.Play(AUserID: Integer);
 var
   LPreviewInfo: NET_DVR_PREVIEWINFO;
 begin
+  Stop;
   if AUserID < 0 then
     raise Exception.Create(RsErrUserNotAuthorized);
 
