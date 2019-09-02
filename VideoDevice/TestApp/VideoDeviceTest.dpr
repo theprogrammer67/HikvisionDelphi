@@ -7,7 +7,7 @@ uses
   uHikvisionErrors in '..\..\common\uHikvisionErrors.pas',
   uVideoPanel in '..\..\common\uVideoPanel.pas',
   uVideoWindow in '..\..\common\uVideoWindow.pas',
-  uVideoDevice in '..\uVideoDevice.pas';
+  uVideoDevice in '..\..\common\uVideoDevice.pas';
 
 {$R *.res}
 
