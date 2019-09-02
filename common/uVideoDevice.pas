@@ -75,6 +75,8 @@ end;
 
 procedure TVideoDevice.Disable;
 begin
+  if not FEnabled then
+    Exit;
   FEnabled := False;
 
   if Assigned(FVideoPanel) then
