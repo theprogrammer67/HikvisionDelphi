@@ -3,28 +3,30 @@
 interface
 
 uses uCHCNetSDK, uHikvisionErrors, uVideoPanel, uVideoWindow, Winapi.Windows,
-  System.SysUtils;
+  System.SysUtils, uCommonUtils;
 
 type
   TVideoDevice = class
   private
+    FLibHandle: THandle;
     FVideoPanel: TVideoPanel;
     FEnabled: Boolean;
     FParentWnd: HWND;
-  private
     FPort: Integer;
     FPassword: string;
     FAddress: string;
     FLogin: string;
+  private
     procedure Authorize;
     procedure SetEnabled(const Value: Boolean);
+    procedure LoadDLL;
+    procedure UnloadDLL;
   public
     constructor Create;
     destructor Destroy; override;
   public
     procedure Enable;
     procedure Disable;
-  public
   public
     property ParentWnd: HWND read FParentWnd write FParentWnd;
     property Enabled: Boolean read FEnabled write SetEnabled;
@@ -65,6 +67,7 @@ end;
 constructor TVideoDevice.Create;
 begin
   FPort := 8000;
+  FLibHandle := 0;
 end;
 
 destructor TVideoDevice.Destroy;
@@ -87,11 +90,15 @@ begin
   end;
   FreeAndNil(FVideoPanel);
   NET_DVR_Cleanup;
+
+  UnloadDLL;
 end;
 
 procedure TVideoDevice.Enable;
 begin
   Disable;
+  LoadDLL;
+
   try
     NET_DVR_Init;
     FVideoPanel := TVideoPanel.Create(FParentWnd);
@@ -105,9 +112,29 @@ begin
   end;
 end;
 
+procedure TVideoDevice.LoadDLL;
+var
+  OldCurrentDir: string;
+begin
+  OldCurrentDir := GetCurrentDir;
+  SetCurrentDir(GetModuleDirectory);
+
+  // Берем dll из локальной папки! 1С меняет временную директорию
+  try
+    LoadLib(FLibHandle, GetModuleDirectory);
+  finally
+    SetCurrentDir(OldCurrentDir);
+  end;
+end;
+
 procedure TVideoDevice.SetEnabled(const Value: Boolean);
 begin
   Enable;
+end;
+
+procedure TVideoDevice.UnloadDLL;
+begin
+  FreeLib(FLibHandle);
 end;
 
 end.
