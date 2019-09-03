@@ -33,12 +33,14 @@ type
     chkEnable: TCheckBox;
     btnAuthorize: TButton;
     Button1: TButton;
+    btnDestroyParentWindow: TButton;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
     procedure btn2Click(Sender: TObject);
     procedure btn3Click(Sender: TObject);
     procedure btn4Click(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
     procedure btnAuthorizeClick(Sender: TObject);
+    procedure btnDestroyParentWindowClick(Sender: TObject);
     procedure btnPlayStopClick(Sender: TObject);
     procedure cbbModeChange(Sender: TObject);
     procedure cbbWIndowChange(Sender: TObject);
@@ -119,6 +121,11 @@ end;
 procedure TfrmMainForm.btnAuthorizeClick(Sender: TObject);
 begin
   Authorize;
+end;
+
+procedure TfrmMainForm.btnDestroyParentWindowClick(Sender: TObject);
+begin
+  FreeAndNil(pnlVideo);
 end;
 
 procedure TfrmMainForm.btnPlayStopClick(Sender: TObject);

@@ -66,13 +66,22 @@ object frmMainForm: TfrmMainForm
       TabOrder = 2
       OnClick = btnAuthorizeClick
     end
+    object btnDestroyParentWindow: TButton
+      Left = 288
+      Top = 4
+      Width = 169
+      Height = 25
+      Caption = 'btnDestroyParentWindow'
+      TabOrder = 3
+      OnClick = btnDestroyParentWindowClick
+    end
   end
   object pgcPages: TPageControl
     Left = 0
     Top = 0
     Width = 714
     Height = 397
-    ActivePage = tsSettings
+    ActivePage = tsVideo
     Align = alClient
     TabOrder = 1
     object tsVideo: TTabSheet
