@@ -30,9 +30,9 @@ type
     procedure UninstallHookParent;
     procedure RecalcVideoWindows;
     procedure AdjustWindowSize;
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
+    procedure DoResize(ASender: TObject);
   public
     constructor Create(AParent: HWND); overload; override;
     constructor Create(AParent: HWND; APanelMode: TPanelMode); overload;
@@ -70,6 +70,8 @@ begin
 
   if nCode = HC_ACTION then
   begin
+    if not Assigned(TVideoPanel.FObject) then
+      Exit;
     LHwnd := tagCWPRETSTRUCT(pointer(lParam)^).HWND;
     if LHwnd <> TVideoPanel.FObject.ParentWindow then
       Exit;
@@ -77,7 +79,7 @@ begin
     LMessage := tagCWPRETSTRUCT(pointer(lParam)^).Message;
     case LMessage of
       WM_SIZE:
-        TVideoPanel.FObject.AdjustWindowSize;
+        PostMessage(TVideoPanel.FObject.Handle, WM_SIZE, 0, 0);
       WM_DESTROY:
         TVideoPanel.FObject.DoLoseParentWindow;
     end;
@@ -141,6 +143,7 @@ begin
   UserID := -1;
   // Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
+  Self.OnResize := DoResize;
   InstallHookParent;
 end;
 
@@ -171,6 +174,12 @@ procedure TVideoPanel.DoLoseParentWindow;
 begin
   if Assigned(OnLoseParentWindow) then
     OnLoseParentWindow(Self);
+end;
+
+procedure TVideoPanel.DoResize(ASender: TObject);
+begin
+  AdjustWindowSize;
+  RecalcVideoWindows;
 end;
 
 procedure TVideoPanel.EnableAll;
@@ -278,10 +287,5 @@ begin
   FParentWndHook := 0;
 end;
 
-procedure TVideoPanel.WMSize(var Message: TWMSize);
-begin
-  inherited;
-  RecalcVideoWindows;
-end;
 
 end.
