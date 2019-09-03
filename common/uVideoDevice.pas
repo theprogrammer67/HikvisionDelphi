@@ -87,6 +87,7 @@ begin
     FVideoPanel.StopAll;
     if FVideoPanel.UserID >= 0 then
       NET_DVR_Logout(FVideoPanel.UserID);
+    FVideoPanel.OnLoseParentWindow := nil;
   end;
   FreeAndNil(FVideoPanel);
   NET_DVR_Cleanup;
