@@ -79,7 +79,7 @@ begin
     LMessage := tagCWPRETSTRUCT(pointer(lParam)^).Message;
     case LMessage of
       WM_SIZE:
-        PostMessage(TVideoPanel.FObject.Handle, WM_SIZE, 0, 0);
+        SendMessage(TVideoPanel.FObject.Handle, WM_SIZE, 0, 0);
       WM_DESTROY:
         TVideoPanel.FObject.DoLoseParentWindow;
     end;
