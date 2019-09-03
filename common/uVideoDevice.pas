@@ -2,7 +2,7 @@
 
 interface
 
-uses uCHCNetSDK, uHikvisionErrors, uVideoPanel, uVideoWindow, Winapi.Windows,
+uses System.Classes, uCHCNetSDK, uHikvisionErrors, uVideoPanel, uVideoWindow, Winapi.Windows,
   System.SysUtils, uCommonUtils;
 
 type
@@ -16,11 +16,15 @@ type
     FPassword: string;
     FAddress: string;
     FLogin: string;
+    FPanelMode: TPanelMode;
+    FOnLoseParentWindow: TNotifyEvent;
   private
     procedure Authorize;
     procedure SetEnabled(const Value: Boolean);
     procedure LoadDLL;
     procedure UnloadDLL;
+    procedure SetPanelMode(const Value: TPanelMode);
+    procedure SetOnLoseParentWindow(const Value: TNotifyEvent);
   public
     constructor Create;
     destructor Destroy; override;
@@ -35,6 +39,9 @@ type
     property Port: Integer read FPort write FPort;
     property Login: string read FLogin write FLogin;
     property Password: string read FPassword write FPassword;
+    property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
+    property OnLoseParentWindow: TNotifyEvent read FOnLoseParentWindow
+      write SetOnLoseParentWindow;
   end;
 
 implementation
@@ -102,7 +109,8 @@ begin
 
   try
     NET_DVR_Init;
-    FVideoPanel := TVideoPanel.Create(FParentWnd);
+    FVideoPanel := TVideoPanel.Create(FParentWnd, FPanelMode);
+    FVideoPanel.OnLoseParentWindow := OnLoseParentWindow;
     Authorize;
     FVideoPanel.Show;
 
@@ -131,6 +139,20 @@ end;
 procedure TVideoDevice.SetEnabled(const Value: Boolean);
 begin
   Enable;
+end;
+
+procedure TVideoDevice.SetOnLoseParentWindow(const Value: TNotifyEvent);
+begin
+  FOnLoseParentWindow := Value;
+  if Assigned(FVideoPanel) then
+    FVideoPanel.OnLoseParentWindow := Value;
+end;
+
+procedure TVideoDevice.SetPanelMode(const Value: TPanelMode);
+begin
+  FPanelMode := Value;
+  if Assigned(FVideoPanel) then
+    FVideoPanel.PanelMode := Value;
 end;
 
 procedure TVideoDevice.UnloadDLL;

@@ -34,7 +34,8 @@ type
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
   public
-    constructor Create(AParent: HWND); override;
+    constructor Create(AParent: HWND); overload; override;
+    constructor Create(AParent: HWND; APanelMode: TPanelMode); overload;
     destructor Destroy; override;
   public
     procedure EnableAll;
@@ -141,6 +142,12 @@ begin
   // Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
   InstallHookParent;
+end;
+
+constructor TVideoPanel.Create(AParent: HWND; APanelMode: TPanelMode);
+begin
+  Create(AParent);
+  FPanelMode := APanelMode;
 end;
 
 destructor TVideoPanel.Destroy;
