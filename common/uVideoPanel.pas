@@ -10,8 +10,9 @@ type
   TPanelMode = (pmSingle, pm22, mt33, pm44);
 
   TVideoPanel = class(TSelfParentControl)
-  private const
+  public const
     WIN_COUNT: Byte = 16;
+  private const
     DEF_COLOR = clSilver;
     DEF_FONTNAME = 'Courier New';
     DEF_FONTSIZE = 24;
@@ -38,11 +39,9 @@ type
     constructor Create(AParent: HWND; APanelMode: TPanelMode); overload;
     destructor Destroy; override;
   public
-    procedure EnableAll;
-    procedure DisableAll;
-    procedure PlayAll(AUserID: Integer); overload;
-    procedure PlayAll; overload;
-    procedure StopAll;
+    procedure EnableAll(AEnabled: Boolean);
+    procedure PlayAll(APlay: Boolean);
+    procedure ShowOverlayTextAll(AShow: Boolean);
   public
     property OnResize;
     property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
@@ -161,15 +160,6 @@ begin
   inherited;
 end;
 
-procedure TVideoPanel.DisableAll;
-var
-  LVideoWindow: TVideoWindow;
-begin
-  for LVideoWindow in VideoWindows do
-    LVideoWindow.Enabled := False;
-  Invalidate;
-end;
-
 procedure TVideoPanel.DoLoseParentWindow;
 begin
   if Assigned(OnLoseParentWindow) then
@@ -182,7 +172,7 @@ begin
   RecalcVideoWindows;
 end;
 
-procedure TVideoPanel.EnableAll;
+procedure TVideoPanel.EnableAll(AEnabled: Boolean);
 var
   LVideoWindow: TVideoWindow;
 begin
@@ -200,19 +190,18 @@ begin
     FParentWndHook := 0;
 end;
 
-procedure TVideoPanel.PlayAll;
-begin
-  PlayAll(UserID);
-end;
-
-procedure TVideoPanel.PlayAll(AUserID: Integer);
+procedure TVideoPanel.PlayAll(APlay: Boolean);
 var
   LVideoWindow: TVideoWindow;
 begin
-  UserID := AUserID;
   for LVideoWindow in VideoWindows do
-    if LVideoWindow.Enabled then
-      PostMessage(LVideoWindow.Handle, WM_PLAYVIDEO, 0, 0);
+    if APlay then
+    begin
+      if LVideoWindow.Enabled then
+        PostMessage(LVideoWindow.Handle, WM_PLAYVIDEO, 0, 0);
+    end
+    else
+      SendMessage(LVideoWindow.Handle, WM_STOPVIDEO, 0, 0);
   Invalidate;
 end;
 
@@ -271,12 +260,12 @@ begin
     LVideoWindow.UserID := FUserID;
 end;
 
-procedure TVideoPanel.StopAll;
+procedure TVideoPanel.ShowOverlayTextAll(AShow: Boolean);
 var
   LVideoWindow: TVideoWindow;
 begin
   for LVideoWindow in VideoWindows do
-    PostMessage(LVideoWindow.Handle, WM_STOPVIDEO, 0, 0);
+    LVideoWindow.ShowOverlayText := AShow;
   Invalidate;
 end;
 
@@ -286,6 +275,5 @@ begin
     UnhookWindowsHookEx(FParentWndHook);
   FParentWndHook := 0;
 end;
-
 
 end.

@@ -61,7 +61,7 @@ begin
   if FLogin = '' then
     raise Exception.Create(RsErrUserEmpty);
 
-  FVideoPanel.StopAll;
+  FVideoPanel.PlayAll(False);
 
   ZeroMemory(@LDeviceInfo, SizeOf(LDeviceInfo));
   FVideoPanel.UserID := NET_DVR_Login_V30(PAnsiChar(AnsiString(FAddress)),
@@ -91,7 +91,7 @@ begin
 
   if Assigned(FVideoPanel) then
   begin
-    FVideoPanel.StopAll;
+    FVideoPanel.PlayAll(False);
     if FVideoPanel.UserID >= 0 then
       NET_DVR_Logout(FVideoPanel.UserID);
     FVideoPanel.OnLoseParentWindow := nil;

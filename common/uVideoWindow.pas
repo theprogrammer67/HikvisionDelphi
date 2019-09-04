@@ -46,7 +46,7 @@ type
     FUserID: Integer;
     FRealHandle: Integer;
     FOverlayText: string;
-    FPrintOverlayText: Boolean;
+    FShowOverlayText: Boolean;
     FPopup: TPopupMenu;
     FMenuItemChannel: TMenuItem;
     FMenuItemPrintOverlayText: TMenuItem;
@@ -84,15 +84,14 @@ type
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
   public
-    procedure Play(AUserID: Integer); overload;
-    procedure Play; overload;
-    procedure Stop;
+    procedure PlayLiveVideo;
+    procedure StopLiveVideo;
   public
     property Channel: Integer read FChannel write SetChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
-    property PrintOverlayText: Boolean read FPrintOverlayText
-      write FPrintOverlayText;
+    property ShowOverlayText: Boolean read FShowOverlayText
+      write FShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
   end;
 
@@ -171,7 +170,7 @@ end;
 
 destructor TVideoWindow.Destroy;
 begin
-  Stop;
+  StopLiveVideo;
   UnRegisterObj;
   FreeAndNil(FPopup);
   inherited;
@@ -212,7 +211,7 @@ var
   LHFont: HFONT;
   LRect: TRect;
 begin
-  if (not FPrintOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
+  if (not FShowOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
     (not Enabled) then
     Exit;
 
@@ -238,7 +237,7 @@ end;
 procedure TVideoWindow.OnPlayVideoMessage(var Msg: TMessage);
 begin
   try
-    Play;
+    PlayLiveVideo;
   except
     FLastErrorDecription := Exception(ExceptObject).Message;
     PrintErrorDescription;
@@ -253,7 +252,7 @@ end;
 procedure TVideoWindow.OnStopVideoMessage(var Msg: TMessage);
 begin
   try
-    Stop;
+    StopLiveVideo;
   except
     FLastErrorDecription := Exception(ExceptObject).Message;
     PrintErrorDescription;
@@ -262,27 +261,18 @@ end;
 
 procedure TVideoWindow.Paint;
 begin
-  // if Assigned(FParentForm) and not FParentForm.Visible then
-  // FParentForm.Show;
   inherited;
   PrintStatusCaption;
 end;
 
-procedure TVideoWindow.Play;
-begin
-  Play(FUserID);
-end;
-
-procedure TVideoWindow.Play(AUserID: Integer);
+procedure TVideoWindow.PlayLiveVideo;
 var
   LPreviewInfo: NET_DVR_PREVIEWINFO;
 begin
-  Stop;
+  StopLiveVideo;
   ClearError;
-  if AUserID < 0 then
+  if UserID < 0 then
     raise Exception.Create(RsErrUserNotAuthorized);
-
-  FUserID := AUserID;
 
   ZeroMemory(@LPreviewInfo, SizeOf(LPreviewInfo));
   LPreviewInfo.hPlayWnd := Self.Handle;
@@ -294,7 +284,7 @@ begin
   LPreviewInfo.byProtoType := 0;
   LPreviewInfo.byPreviewMode := 0;
 
-  FRealHandle := NET_DVR_RealPlay_V40(AUserID, LPreviewInfo, nil, 0);
+  FRealHandle := NET_DVR_RealPlay_V40(UserID, LPreviewInfo, nil, 0);
   if FRealHandle < 0 then
     RaiseLastHVError;
   if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, 0) then
@@ -304,9 +294,9 @@ end;
 procedure TVideoWindow.PopupPlayStop(Sender: TObject);
 begin
   if IsPlaying then
-    Stop
+    StopLiveVideo
   else
-    Play;
+    PlayLiveVideo;
 end;
 
 procedure TVideoWindow.PopupSetChannel(Sender: TObject);
@@ -316,7 +306,7 @@ end;
 
 procedure TVideoWindow.PopupSetPrintOverlayText(Sender: TObject);
 begin
-  PrintOverlayText := not PrintOverlayText;
+  ShowOverlayText := not ShowOverlayText;
 end;
 
 procedure TVideoWindow.PrintErrorDescription;
@@ -370,12 +360,12 @@ begin
   FChannel := Value;
   if IsPlaying then
   begin
-    Stop;
-    Play;
+    StopLiveVideo;
+    PlayLiveVideo;
   end;
 end;
 
-procedure TVideoWindow.Stop;
+procedure TVideoWindow.StopLiveVideo;
 begin
   ClearError;
   if FRealHandle >= 0 then
@@ -402,7 +392,7 @@ begin
   else
     FMenuItemPalyStop.Caption := 'Play';
 
-  FMenuItemPrintOverlayText.Checked := FPrintOverlayText;
+  FMenuItemPrintOverlayText.Checked := FShowOverlayText;
 end;
 
 { TSelfParentControl }
