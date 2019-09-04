@@ -87,7 +87,7 @@ procedure TfrmMainForm.Authorize;
 var
   LDeviceInfo: NET_DVR_DEVICEINFO_V30;
 begin
-  FVideoPanel.StopAll;
+  FVideoPanel.PlayAll(False);
 
   ZeroMemory(@LDeviceInfo, SizeOf(LDeviceInfo));
   FVideoPanel.UserID := NET_DVR_Login_V30
@@ -174,11 +174,11 @@ end;
 
 procedure TfrmMainForm.Play;
 begin
-  FVideoPanel.StopAll;
+  FVideoPanel.PlayAll(False);
 
   Screen.Cursor := crHourGlass;
   try
-    FVideoPanel.PlayAll;
+    FVideoPanel.PlayAll(True);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -186,7 +186,7 @@ end;
 
 procedure TfrmMainForm.Stop;
 begin
-  FVideoPanel.StopAll;
+  FVideoPanel.PlayAll(False);
 end;
 
 procedure TfrmMainForm.tsSettingsShow(Sender: TObject);
@@ -200,7 +200,7 @@ var
 begin
   LVideoWindow := FVideoPanel.VideoWindows[cbbWIndow.ItemIndex];
   lbledtChannel.Text := IntToStr(LVideoWindow.Channel);
-  chkPrintText.Checked := LVideoWindow.PrintOverlayText;
+  chkPrintText.Checked := LVideoWindow.ShowOverlayText;
   chkEnable.Checked := LVideoWindow.Enabled;
   chkVisible.Checked := LVideoWindow.Visible;
 end;
@@ -212,7 +212,7 @@ begin
   LVideoWindow := FVideoPanel.VideoWindows[cbbWIndow.ItemIndex];
 
   LVideoWindow.Channel := StrToInt(lbledtChannel.Text);
-  LVideoWindow.PrintOverlayText := chkPrintText.Checked;
+  LVideoWindow.ShowOverlayText := chkPrintText.Checked;
   LVideoWindow.Enabled := chkEnable.Checked;
   LVideoWindow.Visible := chkVisible.Checked;
   LVideoWindow.OverlayText := mmoText.Text;

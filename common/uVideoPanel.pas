@@ -13,7 +13,7 @@ type
   public const
     WIN_COUNT: Byte = 16;
   private const
-    DEF_COLOR = clSilver;
+    DEF_COLOR = TVideoWindow.STATUS_FONTCOLOR;
     DEF_FONTNAME = 'Courier New';
     DEF_FONTSIZE = 24;
     DEF_FONTCOLOR = clLime;
@@ -33,7 +33,14 @@ type
     procedure AdjustWindowSize;
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
-    procedure DoResize(ASender: TObject);
+    procedure SelectWindow(AHWnd: HWND);
+  protected
+    procedure WMLButtonDown(var Message: TWMLButtonDown);
+      message WM_LBUTTONDOWN;
+    procedure WMLChangeSelected(var Message: TMessage);
+      message WM_CHANGESELECTED;
+    procedure Paint; override;
+    procedure Resize; override;
   public
     constructor Create(AParent: HWND); overload; override;
     constructor Create(AParent: HWND; APanelMode: TPanelMode); overload;
@@ -43,7 +50,6 @@ type
     procedure PlayAll(APlay: Boolean);
     procedure ShowOverlayTextAll(AShow: Boolean);
   public
-    property OnResize;
     property PanelMode: TPanelMode read FPanelMode write SetPanelMode;
     property OnLoseParentWindow: TNotifyEvent read FOnLoseParentWindow
       write FOnLoseParentWindow;
@@ -52,6 +58,8 @@ type
   end;
 
 implementation
+
+uses System.Types;
 
 resourcestring
   RsErrSingletoneOnly = 'Only one TVideoPanel object is allowed';
@@ -142,7 +150,6 @@ begin
   UserID := -1;
   // Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 
-  Self.OnResize := DoResize;
   InstallHookParent;
 end;
 
@@ -166,12 +173,6 @@ begin
     OnLoseParentWindow(Self);
 end;
 
-procedure TVideoPanel.DoResize(ASender: TObject);
-begin
-  AdjustWindowSize;
-  RecalcVideoWindows;
-end;
-
 procedure TVideoPanel.EnableAll(AEnabled: Boolean);
 var
   LVideoWindow: TVideoWindow;
@@ -190,6 +191,25 @@ begin
     FParentWndHook := 0;
 end;
 
+procedure TVideoPanel.Paint;
+var
+  I: Integer;
+  LRect: TRect;
+begin
+  inherited;
+
+  Canvas.Pen.Color := clWhite;
+  for I := 0 to FVideoWindows.Count - 1 do
+  begin
+    if not FVideoWindows[I].Selected then
+      Continue;
+
+    LRect := FVideoWindows[I].BoundsRect;
+    InflateRect(LRect, 1, 1);
+    Canvas.Rectangle(LRect);
+  end;
+end;
+
 procedure TVideoPanel.PlayAll(APlay: Boolean);
 var
   LVideoWindow: TVideoWindow;
@@ -206,6 +226,8 @@ begin
 end;
 
 procedure TVideoPanel.RecalcVideoWindows;
+const
+  MARGIN: Integer = 2;
 var
   FVideoWindow: TVideoWindow;
   LRatio: Byte;
@@ -217,8 +239,8 @@ begin
   Visible := False;
   try
     LRatio := Ord(FPanelMode) + 1;
-    LWidth := Width div LRatio;
-    LHeight := Height div LRatio;
+    LWidth := (Width - MARGIN) div LRatio;
+    LHeight := (Height - MARGIN) div LRatio;
     LCount := LRatio * LRatio;
 
     for I := 0 to FVideoWindows.Count - 1 do
@@ -228,18 +250,39 @@ begin
       if not FVideoWindow.Visible then
         Continue;
 
-      FVideoWindow.Height := LHeight - 1;
-      FVideoWindow.Width := LWidth - 1;
+      FVideoWindow.Height := LHeight - MARGIN;
+      FVideoWindow.Width := LWidth - MARGIN;
 
       XNum := ((I + LRatio) mod LRatio);
       YNum := I div LRatio;
 
-      FVideoWindow.Left := XNum * LWidth;
-      FVideoWindow.Top := YNum * LHeight;
+      FVideoWindow.Left := XNum * LWidth + MARGIN;
+      FVideoWindow.Top := YNum * LHeight + MARGIN;
     end;
   finally
     Visible := True;
   end;
+end;
+
+procedure TVideoPanel.Resize;
+begin
+  AdjustWindowSize;
+  RecalcVideoWindows;
+  inherited;
+end;
+
+procedure TVideoPanel.SelectWindow(AHWnd: HWND);
+var
+  I: Integer;
+begin
+  for I := 0 to FVideoWindows.Count - 1 do
+  begin
+    if FVideoWindows[I].Handle = AHWnd then
+      FVideoWindows[I].Selected := True
+    else
+      FVideoWindows[I].Selected := False;
+  end;
+  Invalidate;
 end;
 
 procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);
@@ -274,6 +317,20 @@ begin
   if FParentWndHook <> 0 then
     UnhookWindowsHookEx(FParentWndHook);
   FParentWndHook := 0;
+end;
+
+procedure TVideoPanel.WMLButtonDown(var Message: TWMLButtonDown);
+var
+  LHwnd: HWND;
+begin
+  LHwnd := ChildWindowFromPoint(Self.Handle, Point(Message.XPos, Message.YPos));
+  if LHwnd <> 0 then
+    SelectWindow(LHwnd);
+end;
+
+procedure TVideoPanel.WMLChangeSelected(var Message: TMessage);
+begin
+  SelectWindow(Message.wParam);
 end;
 
 end.

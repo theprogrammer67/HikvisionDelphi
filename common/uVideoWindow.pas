@@ -9,6 +9,7 @@ uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
 const
   WM_PLAYVIDEO = WM_USER + 0;
   WM_STOPVIDEO = WM_USER + 1;
+  WM_CHANGESELECTED = WM_USER + 2;
 
 type
   TSelfParentControl = class(TCustomControl)
@@ -28,20 +29,21 @@ type
   end;
 
   TVideoWindow = class(TSelfParentControl)
+  public const
+    STATUS_FONTCOLOR = $00FF96A0;
   private const
     CAPTION_DISABLED: string = 'DISABLED';
     CAPTION_STOPPED: string = 'VIDEO STOPPED';
     DEF_COLOR = clNavy;
     ERROR_FONTCOLOR = clYellow;
     ERROR_FONTSIZE = 10;
-    STATUS_FONTCOLOR = $00FF96A0;
     STATUS_FONTNAME = 'Impact';
     STATUS_FONTSIZE = 24;
     DEF_FONTNAME = 'Courier New';
     DEF_FONTSIZE = 24;
     DEF_FONTCOLOR = clLime;
   private
-    // FParentForm: TForm;
+    FSelected: Boolean;
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
@@ -64,8 +66,8 @@ type
       stdcall; static;
     procedure DrawFunction(hDc: IntPtr);
   private
-    procedure OnPlayVideoMessage(var Msg: TMessage); message WM_PLAYVIDEO;
-    procedure OnStopVideoMessage(var Msg: TMessage); message WM_STOPVIDEO;
+    procedure WMPlayVideo(var Message: TMessage); message WM_PLAYVIDEO;
+    procedure WMStopVideo(var Message: TMessage); message WM_STOPVIDEO;
   private
     procedure ClearError;
     function GetIsPlaying: Boolean;
@@ -79,6 +81,8 @@ type
     procedure UpdatePopupItems;
     procedure SetChannel(const Value: Integer);
   protected
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
     procedure Paint; override;
   public
     constructor Create(AParent: TWinControl); reintroduce;
@@ -87,6 +91,7 @@ type
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
   public
+    property Selected: Boolean read FSelected write FSelected;
     property Channel: Integer read FChannel write SetChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
@@ -234,7 +239,16 @@ begin
   Result := FRealHandle >= 0;
 end;
 
-procedure TVideoWindow.OnPlayVideoMessage(var Msg: TMessage);
+procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if Assigned(Parent) then
+    SendMessage(Parent.Handle, WM_CHANGESELECTED, Handle, 0);
+
+  inherited;
+end;
+
+procedure TVideoWindow.WMPlayVideo(var Message: TMessage);
 begin
   try
     PlayLiveVideo;
@@ -249,7 +263,7 @@ begin
   UpdatePopupItems;
 end;
 
-procedure TVideoWindow.OnStopVideoMessage(var Msg: TMessage);
+procedure TVideoWindow.WMStopVideo(var Message: TMessage);
 begin
   try
     StopLiveVideo;
