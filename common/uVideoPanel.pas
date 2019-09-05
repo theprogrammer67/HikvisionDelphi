@@ -201,7 +201,7 @@ end;
 procedure TVideoPanel.PaintBorders;
 var
   I: Integer;
-  LRect: TRect;
+  LBorder: TRect;
 begin
   for I := 0 to FVideoWindows.Count - 1 do
   begin
@@ -210,9 +210,9 @@ begin
     else
       Canvas.Brush.Color := Color;
 
-    LRect := FVideoWindows[I].BoundsRect;
-    InflateRect(LRect, 1, 1);
-    Canvas.FrameRect(LRect);
+    LBorder := FVideoWindows[I].BoundsRect;
+    InflateRect(LBorder, 1, 1);
+    Canvas.FrameRect(LBorder);
   end;
 end;
 
