@@ -34,6 +34,7 @@ type
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
     procedure SelectWindow(AHWnd: HWND);
+    procedure PaintBorders;
   protected
     procedure WMLButtonDown(var Message: TWMLButtonDown);
       message WM_LBUTTONDOWN;
@@ -192,21 +193,26 @@ begin
 end;
 
 procedure TVideoPanel.Paint;
+begin
+  inherited;
+  PaintBorders;
+end;
+
+procedure TVideoPanel.PaintBorders;
 var
   I: Integer;
   LRect: TRect;
 begin
-  inherited;
-
-  Canvas.Pen.Color := clWhite;
   for I := 0 to FVideoWindows.Count - 1 do
   begin
-    if not FVideoWindows[I].Selected then
-      Continue;
+    if FVideoWindows[I].Selected then
+      Canvas.Brush.Color := clWhite
+    else
+      Canvas.Brush.Color := Color;
 
     LRect := FVideoWindows[I].BoundsRect;
     InflateRect(LRect, 1, 1);
-    Canvas.Rectangle(LRect);
+    Canvas.FrameRect(LRect);
   end;
 end;
 
@@ -282,7 +288,7 @@ begin
     else
       FVideoWindows[I].Selected := False;
   end;
-  Invalidate;
+  PaintBorders;
 end;
 
 procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);

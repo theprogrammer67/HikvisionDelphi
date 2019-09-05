@@ -82,7 +82,7 @@ end;
 
 procedure TfrmMainForm.btnDisableWindowsClick(Sender: TObject);
 begin
-  FVideoDevice.VideoPanel.DisableAll;
+  FVideoDevice.VideoPanel.EnableAll(False);
   UpdateWindowControls;
 end;
 
@@ -105,18 +105,18 @@ end;
 
 procedure TfrmMainForm.btnEnableWindowsClick(Sender: TObject);
 begin
-  FVideoDevice.VideoPanel.EnableAll;
+  FVideoDevice.VideoPanel.EnableAll(True);
   UpdateWindowControls;
 end;
 
 procedure TfrmMainForm.btnPlayAllClick(Sender: TObject);
 begin
-  FVideoDevice.VideoPanel.PlayAll;
+  FVideoDevice.VideoPanel.PlayAll(True);
 end;
 
 procedure TfrmMainForm.btnStopAllClick(Sender: TObject);
 begin
-  FVideoDevice.VideoPanel.StopAll;
+  FVideoDevice.VideoPanel.PlayAll(False);
 end;
 
 procedure TfrmMainForm.cbbModeChange(Sender: TObject);
@@ -143,7 +143,7 @@ begin
   LVideoWindow := FVideoDevice.VideoPanel.VideoWindows[cbbWIndow.ItemIndex];
 
   lbledtChannel.Text := IntToStr(LVideoWindow.Channel);
-  chkPrintText.Checked := LVideoWindow.PrintOverlayText;
+  chkPrintText.Checked := LVideoWindow.ShowOverlayText;
   chkEnable.Checked := LVideoWindow.Enabled;
   chkVisible.Checked := LVideoWindow.Visible;
 end;
@@ -155,7 +155,7 @@ begin
   LVideoWindow := FVideoDevice.VideoPanel.VideoWindows[cbbWIndow.ItemIndex];
 
   LVideoWindow.Channel := StrToInt(lbledtChannel.Text);
-  LVideoWindow.PrintOverlayText := chkPrintText.Checked;
+  LVideoWindow.ShowOverlayText := chkPrintText.Checked;
   LVideoWindow.Enabled := chkEnable.Checked;
   LVideoWindow.Visible := chkVisible.Checked;
   LVideoWindow.OverlayText := mmoText.Text;

@@ -242,7 +242,7 @@ end;
 procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 begin
-  if Assigned(Parent) then
+  if Assigned(Parent) and (Button = mbLeft) then
     SendMessage(Parent.Handle, WM_CHANGESELECTED, Handle, 0);
 
   inherited;

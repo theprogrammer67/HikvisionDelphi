@@ -23,9 +23,6 @@ object frmMainForm: TfrmMainForm
     Height = 119
     Align = alBottom
     TabOrder = 0
-    ExplicitLeft = -8
-    ExplicitTop = 416
-    ExplicitWidth = 831
     DesignSize = (
       903
       119)
@@ -38,7 +35,6 @@ object frmMainForm: TfrmMainForm
       Caption = 'Enable'
       TabOrder = 0
       OnClick = btnEnableClick
-      ExplicitLeft = 592
     end
     object btnDisable: TButton
       Left = 767
@@ -49,7 +45,6 @@ object frmMainForm: TfrmMainForm
       Caption = 'Disable'
       TabOrder = 1
       OnClick = btnDisableClick
-      ExplicitLeft = 695
     end
     object chkBuiltin: TCheckBox
       Left = 664
@@ -61,7 +56,6 @@ object frmMainForm: TfrmMainForm
       Checked = True
       State = cbChecked
       TabOrder = 2
-      ExplicitLeft = 592
     end
     object cbbMode: TComboBox
       Left = 745
@@ -79,7 +73,6 @@ object frmMainForm: TfrmMainForm
         '2 * 2'
         '3 * 3'
         '4 * 4')
-      ExplicitLeft = 673
     end
     object lbledtAddress: TLabeledEdit
       Left = 19
@@ -280,8 +273,6 @@ object frmMainForm: TfrmMainForm
     Height = 448
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 624
-    ExplicitHeight = 464
   end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle
