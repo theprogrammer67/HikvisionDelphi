@@ -9,6 +9,8 @@ uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
 type
   TPanelMode = (pmSingle, pm22, mt33, pm44);
 
+  TSelectWindow = procedure(AIndex: Integer) of object;
+
   TVideoPanel = class(TSelfParentControl)
   public const
     WIN_COUNT: Byte = 16;
@@ -25,6 +27,7 @@ type
     FParentWndHook: HHOOK;
     FVideoWindows: TObjectList<TVideoWindow>;
     FOnLoseParentWindow: TNotifyEvent;
+    FOnSelectWindow: TSelectWindow;
   private
     procedure SetPanelMode(const Value: TPanelMode);
     procedure InstallHookParent;
@@ -34,7 +37,11 @@ type
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
     procedure SelectWindow(AHWnd: HWND);
+    procedure SelectItem(AIndex: Integer);
+    procedure DoSelectWindow(AIndex: Integer);
     procedure PaintBorders;
+    function GetItemIndex: Integer;
+    procedure SetItemIndex(const Value: Integer);
   protected
     procedure WMLButtonDown(var Message: TWMLButtonDown);
       message WM_LBUTTONDOWN;
@@ -56,6 +63,8 @@ type
       write FOnLoseParentWindow;
     property VideoWindows: TObjectList<TVideoWindow> read FVideoWindows;
     property UserID: Integer read FUserID write SetUserID;
+    property ItemIndex: Integer read GetItemIndex write SetItemIndex;
+    property OnSelectWindow: TSelectWindow read FOnSelectWindow write FOnSelectWindow;
   end;
 
 implementation
@@ -174,6 +183,12 @@ begin
     OnLoseParentWindow(Self);
 end;
 
+procedure TVideoPanel.DoSelectWindow(AIndex: Integer);
+begin
+  if Assigned(FOnSelectWindow) then
+    FOnSelectWindow(AIndex);
+end;
+
 procedure TVideoPanel.EnableAll(AEnabled: Boolean);
 var
   LVideoWindow: TVideoWindow;
@@ -181,6 +196,16 @@ begin
   for LVideoWindow in VideoWindows do
     LVideoWindow.Enabled := True;
   Invalidate;
+end;
+
+function TVideoPanel.GetItemIndex: Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := 0 to FVideoWindows.Count - 1 do
+    if FVideoWindows[I].Selected then
+      Exit(I);
 end;
 
 procedure TVideoPanel.InstallHookParent;
@@ -277,18 +302,40 @@ begin
   inherited;
 end;
 
+procedure TVideoPanel.SelectItem(AIndex: Integer);
+var
+  I: Integer;
+  LSelectedIndex: Integer;
+begin
+  LSelectedIndex := -1;
+  for I := 0 to FVideoWindows.Count - 1 do
+  begin
+    if I = AIndex then
+    begin
+      FVideoWindows[I].Selected := True;
+      LSelectedIndex := I;
+    end
+    else
+      FVideoWindows[I].Selected := False;
+  end;
+  PaintBorders;
+
+  if LSelectedIndex >= 0 then
+    DoSelectWindow(LSelectedIndex);
+end;
+
 procedure TVideoPanel.SelectWindow(AHWnd: HWND);
 var
   I: Integer;
 begin
   for I := 0 to FVideoWindows.Count - 1 do
-  begin
     if FVideoWindows[I].Handle = AHWnd then
-      FVideoWindows[I].Selected := True
-    else
-      FVideoWindows[I].Selected := False;
-  end;
-  PaintBorders;
+      SelectItem(I);
+end;
+
+procedure TVideoPanel.SetItemIndex(const Value: Integer);
+begin
+  SelectItem(Value);
 end;
 
 procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);
