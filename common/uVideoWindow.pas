@@ -84,6 +84,7 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure Paint; override;
+    procedure SetEnabled(Value: Boolean); override;
   public
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
@@ -377,6 +378,12 @@ begin
     StopLiveVideo;
     PlayLiveVideo;
   end;
+end;
+
+procedure TVideoWindow.SetEnabled(Value: Boolean);
+begin
+  inherited;
+  Invalidate;
 end;
 
 procedure TVideoWindow.StopLiveVideo;
