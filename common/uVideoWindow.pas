@@ -12,6 +12,33 @@ const
   WM_CHANGESELECTED = WM_USER + 2;
 
 type
+  TTextRectPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
+
+  TVideoWindow = class;
+
+  TTextRectangle = class
+  private
+    FParent: TVideoWindow;
+    FRectangle: TRect;
+    FWidth: Integer;
+    FHeight: Integer;
+    FPosition: TTextRectPosition;
+    FText: string;
+  private
+    procedure CalcRectangle(ARefresh: Boolean = True);
+    procedure SetHeight(const Value: Integer);
+    procedure SetPosition(const Value: TTextRectPosition);
+    procedure SetWidth(const Value: Integer);
+  public
+    constructor Create(AParent: TVideoWindow);
+    procedure DrawText(hDc: IntPtr);
+  public
+    property Position: TTextRectPosition read FPosition write SetPosition;
+    property Width: Integer read FWidth write SetWidth;
+    property Height: Integer read FHeight write SetHeight;
+    property Text: string read FText write FText;
+  end;
+
   TSelfParentControl = class(TCustomControl)
   private const
     DEF_FONTNAME = 'Courier New';
@@ -48,13 +75,13 @@ type
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
-    FOverlayText: string;
     FShowOverlayText: Boolean;
     FPopup: TPopupMenu;
     FMenuItemChannel: TMenuItem;
     FMenuItemPrintOverlayText: TMenuItem;
     FMenuItemPalyStop: TMenuItem;
     FLastErrorDecription: string;
+    FTextRectangle: TTextRectangle;
   private
     class var FObjects: TThreadList<TVideoWindow>;
     procedure RegisterObj;
@@ -82,10 +109,13 @@ type
     procedure UpdatePopupItems;
     procedure SetChannel(const Value: Integer);
     procedure SetUsed(const Value: Boolean);
+    function GetOverlayText: string;
+    procedure SetOverlayText(const Value: string);
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure Paint; override;
+    procedure Resize; override;
   public
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
@@ -93,10 +123,11 @@ type
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
   public
+    property Font;
     property Used: Boolean read FUsed write SetUsed;
     property Selected: Boolean read FSelected write FSelected;
     property Channel: Integer read FChannel write SetChannel;
-    property OverlayText: string read FOverlayText write FOverlayText;
+    property OverlayText: string read GetOverlayText write SetOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
     property ShowOverlayText: Boolean read FShowOverlayText
       write FShowOverlayText;
@@ -116,13 +147,16 @@ end;
 
 constructor TVideoWindow.Create(AParent: TWinControl);
 begin
+  FTextRectangle := TTextRectangle.Create(Self);
   inherited Create(AParent);
+
 
   FUserID := -1;
   FRealHandle := -1;
   Color := DEF_COLOR;
-  Used := False;
+  Used := True;
   FChannel := 1;
+
 
   if Assigned(Parent) then
     ParentFont := True
@@ -181,6 +215,7 @@ begin
   StopLiveVideo;
   UnRegisterObj;
   FreeAndNil(FPopup);
+  FreeAndNil(FTextRectangle);
   inherited;
   FreeAndNil(FParentForm);
 end;
@@ -214,32 +249,22 @@ begin
 end;
 
 procedure TVideoWindow.DrawFunction(hDc: IntPtr);
-var
-  LObj: HGDIOBJ;
-  LHFont: HFONT;
-  LRect: TRect;
 begin
   if (not FShowOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
     (not Used) then
     Exit;
 
-  LHFont := CreateFont(Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
-    PWideChar(Font.Name));
-  LObj := SelectObject(hDc, LHFont);
-  try
-    SetBkMode(hDc, TRANSPARENT);
-    SetTextColor(hDc, Font.Color);
-    LRect := Rect(0, 0, Width, Height);
-    DrawText(hDc, PWideChar(OverlayText), Length(OverlayText), LRect,
-      DT_LEFT or DT_TOP);
-  finally
-    DeleteObject(SelectObject(hDc, LObj));
-  end;
+  FTextRectangle.DrawText(hDc);
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
 begin
   Result := FRealHandle >= 0;
+end;
+
+function TVideoWindow.GetOverlayText: string;
+begin
+  Result := FTextRectangle.Text;
 end;
 
 procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -372,6 +397,12 @@ begin
   FObjects.Add(Self);
 end;
 
+procedure TVideoWindow.Resize;
+begin
+  inherited;
+  FTextRectangle.CalcRectangle;
+end;
+
 procedure TVideoWindow.SetChannel(const Value: Integer);
 begin
   FChannel := Value;
@@ -380,6 +411,11 @@ begin
     StopLiveVideo;
     PlayLiveVideo;
   end;
+end;
+
+procedure TVideoWindow.SetOverlayText(const Value: string);
+begin
+  FTextRectangle.Text := Value;
 end;
 
 procedure TVideoWindow.SetUsed(const Value: Boolean);
@@ -477,6 +513,71 @@ begin
     FParentForm.Visible := True;
 
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
+end;
+
+{ TTextRectangle }
+
+procedure TTextRectangle.CalcRectangle(ARefresh: Boolean);
+begin
+  FRectangle.Left := 0;
+  FRectangle.Right := 0;
+
+  FRectangle.Width := (FParent.Width * Width) div 100;
+  FRectangle.Height := (FParent.Height * Height) div 100;
+
+  if FPosition in [tpTopRight, tpBottomRight] then
+    FRectangle.Offset(FParent.Width - FRectangle.Width, 0);
+
+  if FPosition in [tpBottomLeft, tpBottomRight] then
+    FRectangle.Offset(0, FParent.Height - FRectangle.Height);
+
+  if ARefresh then
+    FParent.Invalidate;
+end;
+
+constructor TTextRectangle.Create(AParent: TVideoWindow);
+begin
+  FParent := AParent;
+  FPosition := tpTopLeft;
+  FWidth := 100;
+  FHeight := 100;
+  CalcRectangle(False);
+end;
+
+procedure TTextRectangle.DrawText(hDc: IntPtr);
+var
+  LObj: HGDIOBJ;
+  LHFont: HFONT;
+begin
+  LHFont := CreateFont(FParent.Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
+    PWideChar(FParent.Font.Name));
+  LObj := SelectObject(hDc, LHFont);
+  try
+    SetBkMode(hDc, TRANSPARENT);
+    SetTextColor(hDc, FParent.Font.Color);
+    Winapi.Windows.DrawText(hDc, PWideChar(FParent.OverlayText), Length(FParent.OverlayText), FRectangle,
+      DT_LEFT or DT_TOP);
+  finally
+    DeleteObject(SelectObject(hDc, LObj));
+  end;
+end;
+
+procedure TTextRectangle.SetHeight(const Value: Integer);
+begin
+  FHeight := Value;
+  CalcRectangle;
+end;
+
+procedure TTextRectangle.SetPosition(const Value: TTextRectPosition);
+begin
+  FPosition := Value;
+  CalcRectangle;
+end;
+
+procedure TTextRectangle.SetWidth(const Value: Integer);
+begin
+  FWidth := Value;
+  CalcRectangle;
 end;
 
 end.
