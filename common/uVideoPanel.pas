@@ -194,7 +194,7 @@ var
   LVideoWindow: TVideoWindow;
 begin
   for LVideoWindow in VideoWindows do
-    LVideoWindow.Enabled := True;
+    LVideoWindow.Used := True;
   Invalidate;
 end;
 
@@ -248,7 +248,7 @@ begin
   for LVideoWindow in VideoWindows do
     if APlay then
     begin
-      if LVideoWindow.Enabled then
+      if LVideoWindow.Used then
         PostMessage(LVideoWindow.Handle, WM_PLAYVIDEO, 0, 0);
     end
     else

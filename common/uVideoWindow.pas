@@ -43,6 +43,7 @@ type
     DEF_FONTSIZE = 24;
     DEF_FONTCOLOR = clLime;
   private
+    FUsed: Boolean;
     FSelected: Boolean;
     FChannel: Integer;
     FUserID: Integer;
@@ -80,11 +81,11 @@ type
     procedure PopupSetPrintOverlayText(Sender: TObject);
     procedure UpdatePopupItems;
     procedure SetChannel(const Value: Integer);
+    procedure SetUsed(const Value: Boolean);
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure Paint; override;
-    procedure SetEnabled(Value: Boolean); override;
   public
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
@@ -92,6 +93,7 @@ type
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
   public
+    property Used: Boolean read FUsed write SetUsed;
     property Selected: Boolean read FSelected write FSelected;
     property Channel: Integer read FChannel write SetChannel;
     property OverlayText: string read FOverlayText write FOverlayText;
@@ -119,7 +121,7 @@ begin
   FUserID := -1;
   FRealHandle := -1;
   Color := DEF_COLOR;
-  Enabled := False;
+  Used := False;
   FChannel := 1;
 
   if Assigned(Parent) then
@@ -218,7 +220,7 @@ var
   LRect: TRect;
 begin
   if (not FShowOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
-    (not Enabled) then
+    (not Used) then
     Exit;
 
   LHFont := CreateFont(Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
@@ -348,7 +350,7 @@ var
 begin
   PrintErrorDescription;
 
-  if not Enabled then
+  if not Used then
     LText := CAPTION_DISABLED
   else if not IsPlaying then
     LText := CAPTION_STOPPED
@@ -380,9 +382,9 @@ begin
   end;
 end;
 
-procedure TVideoWindow.SetEnabled(Value: Boolean);
+procedure TVideoWindow.SetUsed(const Value: Boolean);
 begin
-  inherited;
+  FUsed := Value;
   Invalidate;
 end;
 
