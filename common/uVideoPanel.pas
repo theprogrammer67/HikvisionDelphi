@@ -230,6 +230,9 @@ var
 begin
   for I := 0 to FVideoWindows.Count - 1 do
   begin
+    if not FVideoWindows[I].Visible then
+      Continue;
+
     if FVideoWindows[I].Selected then
       Canvas.Brush.Color := clWhite
     else
