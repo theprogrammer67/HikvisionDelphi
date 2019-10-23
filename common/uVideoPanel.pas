@@ -248,7 +248,7 @@ begin
   for LVideoWindow in VideoWindows do
     if APlay then
     begin
-      if LVideoWindow.Used then
+      if (LVideoWindow.Used) and (LVideoWindow.Visible) then
         PostMessage(LVideoWindow.Handle, WM_PLAYVIDEO, 0, 0);
     end
     else
