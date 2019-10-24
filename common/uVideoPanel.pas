@@ -18,7 +18,7 @@ type
     DEF_COLOR = TVideoWindow.STATUS_FONTCOLOR;
     DEF_FONTNAME = 'Courier New';
     DEF_FONTSIZE = 24;
-    DEF_FONTCOLOR = clLime;
+    DEF_FONTCOLOR = clBlack;
   private
     class var FObject: TVideoPanel;
   private

@@ -4,7 +4,7 @@ interface
 
 uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
   Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus,
-  Vcl.Forms, Winapi.Messages;
+  Vcl.Forms, Winapi.Messages, System.Math;
 
 const
   WM_PLAYVIDEO = WM_USER + 0;
@@ -17,20 +17,28 @@ type
   TVideoWindow = class;
 
   TTextRectangle = class
+  private const
+    DEF_BKALPHABLEND = 128;
+    DEF_BKCOLOR = clWhite;
+    DEF_WIDTH = 50;
+    DEF_HEIGHT = 50;
   private
     FParent: TVideoWindow;
-    FRectangle: TRect;
     FWidth: Integer;
     FHeight: Integer;
     FPosition: TTextRectPosition;
     FText: string;
+    FBackgroundAlfaBlend: Byte;
+    FRectangle: TRect;
+    FBackground: TBitmap;
   private
-    procedure CalcRectangle(ARefresh: Boolean = True);
+    procedure Resize(ARefresh: Boolean = True);
     procedure SetHeight(const Value: Integer);
     procedure SetPosition(const Value: TTextRectPosition);
     procedure SetWidth(const Value: Integer);
   public
     constructor Create(AParent: TVideoWindow);
+    destructor Destroy; override;
     procedure DrawText(hDc: IntPtr);
   public
     property Position: TTextRectPosition read FPosition write SetPosition;
@@ -68,8 +76,9 @@ type
     STATUS_FONTSIZE = 24;
     DEF_FONTNAME = 'Courier New';
     DEF_FONTSIZE = 24;
-    DEF_FONTCOLOR = clLime;
+    DEF_FONTCOLOR = clBlack;
   private
+    FId: Cardinal;
     FUsed: Boolean;
     FSelected: Boolean;
     FChannel: Integer;
@@ -82,8 +91,10 @@ type
     FMenuItemPalyStop: TMenuItem;
     FLastErrorDecription: string;
     FTextRectangle: TTextRectangle;
+    FEvenFrame: Boolean;
   private
     class var FObjects: TThreadList<TVideoWindow>;
+    class var FGlobalId: Cardinal;
     procedure RegisterObj;
     procedure UnRegisterObj;
   public
@@ -147,16 +158,13 @@ end;
 
 constructor TVideoWindow.Create(AParent: TWinControl);
 begin
-  FTextRectangle := TTextRectangle.Create(Self);
   inherited Create(AParent);
-
 
   FUserID := -1;
   FRealHandle := -1;
   Color := DEF_COLOR;
   Used := True;
   FChannel := 1;
-
 
   if Assigned(Parent) then
     ParentFont := True
@@ -169,6 +177,8 @@ begin
 
   RegisterObj;
   CreatePopupMenu;
+
+  FTextRectangle := TTextRectangle.Create(Self);
 end;
 
 procedure TVideoWindow.CreatePopupMenu;
@@ -208,6 +218,7 @@ end;
 class constructor TVideoWindow.Create;
 begin
   FObjects := TThreadList<TVideoWindow>.Create;
+  FGlobalId := 0;
 end;
 
 destructor TVideoWindow.Destroy;
@@ -237,7 +248,7 @@ begin
     for I := 0 to LObjects.Count - 1 do
     begin
       LObj := LObjects[I];
-      if LObj.FRealHandle = lRealHandle then
+      if LObj.FId = dwUser then
       begin
         LObj.DrawFunction(hDc);
         Break;
@@ -254,7 +265,9 @@ begin
     (not Used) then
     Exit;
 
-  FTextRectangle.DrawText(hDc);
+  FEvenFrame := not FEvenFrame;
+  if not FEvenFrame then // Обрабатываем только нечетные вызовы
+    FTextRectangle.DrawText(hDc);
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
@@ -267,8 +280,8 @@ begin
   Result := FTextRectangle.Text;
 end;
 
-procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
-  Y: Integer);
+procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
 begin
   if Assigned(Parent) and (Button = mbLeft) then
     SendMessage(Parent.Handle, WM_CHANGESELECTED, Handle, 0);
@@ -329,7 +342,8 @@ begin
   FRealHandle := NET_DVR_RealPlay_V40(UserID, LPreviewInfo, nil, 0);
   if FRealHandle < 0 then
     RaiseLastHVError;
-  if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, 0) then
+  FEvenFrame := False;
+  if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
     RaiseLastHVError;
 end;
 
@@ -395,12 +409,16 @@ end;
 procedure TVideoWindow.RegisterObj;
 begin
   FObjects.Add(Self);
+  Self.FId := FGlobalId;
+  Inc(FGlobalId);
 end;
 
 procedure TVideoWindow.Resize;
 begin
   inherited;
-  FTextRectangle.CalcRectangle;
+
+  if Assigned(FTextRectangle) then
+    FTextRectangle.Resize;
 end;
 
 procedure TVideoWindow.SetChannel(const Value: Integer);
@@ -517,19 +535,30 @@ end;
 
 { TTextRectangle }
 
-procedure TTextRectangle.CalcRectangle(ARefresh: Boolean);
+procedure TTextRectangle.Resize(ARefresh: Boolean);
 begin
-  FRectangle.Left := 0;
-  FRectangle.Right := 0;
+  if not Assigned(FParent) or (FParent.Width = 0) or (FParent.Height = 0) then
+    Exit;
 
-  FRectangle.Width := (FParent.Width * Width) div 100;
-  FRectangle.Height := (FParent.Height * Height) div 100;
+  FRectangle.Left := 1;
+  FRectangle.Top := 1;
+
+  FRectangle.Width := Max(((FParent.Width - 2) * Width) div 100, 2);
+  FRectangle.Height := Max(((FParent.Height - 2) * Height) div 100, 2);
 
   if FPosition in [tpTopRight, tpBottomRight] then
-    FRectangle.Offset(FParent.Width - FRectangle.Width, 0);
+    FRectangle.Offset(FParent.Width - FRectangle.Width - 1, 0);
 
   if FPosition in [tpBottomLeft, tpBottomRight] then
-    FRectangle.Offset(0, FParent.Height - FRectangle.Height);
+    FRectangle.Offset(0, FParent.Height - FRectangle.Height - 1);
+
+  FBackground.Canvas.Lock;
+  try
+    FBackground.SetSize(FRectangle.Width, FRectangle.Height);
+    FBackground.Canvas.Rectangle(0, 0, FBackground.Width, FBackground.Height);
+  finally
+    FBackground.Canvas.Unlock;
+  end;
 
   if ARefresh then
     FParent.Invalidate;
@@ -537,26 +566,56 @@ end;
 
 constructor TTextRectangle.Create(AParent: TVideoWindow);
 begin
+  FBackground := TBitmap.Create;
+  FBackground.PixelFormat := pfDevice;
+  FBackground.Canvas.Pen.Color := DEF_BKCOLOR;
+  FBackground.Canvas.Brush.Color := DEF_BKCOLOR;
+  FBackgroundAlfaBlend := DEF_BKALPHABLEND;
+
   FParent := AParent;
   FPosition := tpTopLeft;
-  FWidth := 100;
-  FHeight := 100;
-  CalcRectangle(False);
+  FWidth := DEF_WIDTH;
+  FHeight := DEF_HEIGHT;
+  Resize(False);
+end;
+
+destructor TTextRectangle.Destroy;
+begin
+  FreeAndNil(FBackground);
+  inherited;
 end;
 
 procedure TTextRectangle.DrawText(hDc: IntPtr);
 var
   LObj: HGDIOBJ;
   LHFont: HFONT;
+  Desc: TBlendFunction;
 begin
-  LHFont := CreateFont(FParent.Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 2, 0,
-    PWideChar(FParent.Font.Name));
+  // Фон
+  Desc.BlendOp := AC_SRC_OVER;
+  Desc.BlendFlags := 0;
+  Desc.SourceConstantAlpha := FBackgroundAlfaBlend;
+  Desc.AlphaFormat := 0;
+
+  FBackground.Canvas.Lock;
+  try
+    Winapi.Windows.AlphaBlend(hDc, FRectangle.Left, FRectangle.Top,
+      FRectangle.Width, FRectangle.Height, FBackground.Canvas.Handle, 0, 0,
+      FBackground.Width, FBackground.Height, Desc);
+  finally
+    FBackground.Canvas.Unlock;
+  end;
+
+  // Текст
+  LHFont := CreateFont(FParent.Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0,
+    2, 0, PWideChar(FParent.Font.Name));
   LObj := SelectObject(hDc, LHFont);
   try
     SetBkMode(hDc, TRANSPARENT);
     SetTextColor(hDc, FParent.Font.Color);
-    Winapi.Windows.DrawText(hDc, PWideChar(FParent.OverlayText), Length(FParent.OverlayText), FRectangle,
-      DT_LEFT or DT_TOP);
+    Winapi.Windows.DrawText(hDc, PWideChar(FParent.OverlayText),
+      Length(FParent.OverlayText), FRectangle, DT_LEFT or DT_TOP or
+      DT_WORDBREAK);
   finally
     DeleteObject(SelectObject(hDc, LObj));
   end;
@@ -565,19 +624,19 @@ end;
 procedure TTextRectangle.SetHeight(const Value: Integer);
 begin
   FHeight := Value;
-  CalcRectangle;
+  Resize;
 end;
 
 procedure TTextRectangle.SetPosition(const Value: TTextRectPosition);
 begin
   FPosition := Value;
-  CalcRectangle;
+  Resize;
 end;
 
 procedure TTextRectangle.SetWidth(const Value: Integer);
 begin
   FWidth := Value;
-  CalcRectangle;
+  Resize;
 end;
 
 end.
