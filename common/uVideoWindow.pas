@@ -64,6 +64,12 @@ type
   end;
 
   TVideoWindow = class(TSelfParentControl)
+  type
+    TMenuItems = record
+      Channel: TMenuItem;
+      PrintOverlayText: TMenuItem;
+      PalyStop: TMenuItem;
+    end;
   public const
     STATUS_FONTCOLOR = $00FF96A0;
   private const
@@ -85,13 +91,12 @@ type
     FUserID: Integer;
     FRealHandle: Integer;
     FShowOverlayText: Boolean;
-    FPopup: TPopupMenu;
-    FMenuItemChannel: TMenuItem;
-    FMenuItemPrintOverlayText: TMenuItem;
-    FMenuItemPalyStop: TMenuItem;
     FLastErrorDecription: string;
     FTextRectangle: TTextRectangle;
     FEvenFrame: Boolean;
+
+    FMenu: TPopupMenu;
+    FMenuItems: TMenuItems;
   private
     class var FObjects: TThreadList<TVideoWindow>;
     class var FGlobalId: Cardinal;
@@ -186,33 +191,33 @@ var
   LSubItem: TMenuItem;
   I: Integer;
 begin
-  FPopup := TPopupMenu.Create(Self);
-  FPopup.AutoHotkeys := maManual;
-  FPopup.OnPopup := OnPopup;
+  FMenu := TPopupMenu.Create(Self);
+  FMenu.AutoHotkeys := maManual;
+  FMenu.OnPopup := OnPopup;
 
-  FMenuItemChannel := TMenuItem.Create(FPopup);
-  FMenuItemChannel.Caption := 'Set channel';
-  FPopup.Items.Add(FMenuItemChannel);
+  FMenuItems.Channel := TMenuItem.Create(FMenu);
+  FMenuItems.Channel.Caption := 'Set channel';
+  FMenu.Items.Add(FMenuItems.Channel);
 
   for I := 1 to 16 do
   begin
-    LSubItem := TMenuItem.Create(FPopup);
+    LSubItem := TMenuItem.Create(FMenu);
     LSubItem.Caption := 'Channel ' + IntToStr(I);
     LSubItem.Tag := I;
     LSubItem.OnClick := PopupSetChannel;
-    FMenuItemChannel.Add(LSubItem);
+    FMenuItems.Channel.Add(LSubItem);
   end;
 
-  FMenuItemPalyStop := TMenuItem.Create(FPopup);
-  FMenuItemPalyStop.OnClick := PopupPlayStop;
-  FPopup.Items.Add(FMenuItemPalyStop);
+  FMenuItems.PalyStop := TMenuItem.Create(FMenu);
+  FMenuItems.PalyStop.OnClick := PopupPlayStop;
+  FMenu.Items.Add(FMenuItems.PalyStop);
 
-  FMenuItemPrintOverlayText := TMenuItem.Create(FPopup);
-  FMenuItemPrintOverlayText.Caption := 'Print overlay text';
-  FMenuItemPrintOverlayText.OnClick := PopupSetPrintOverlayText;
-  FPopup.Items.Add(FMenuItemPrintOverlayText);
+  FMenuItems.PrintOverlayText := TMenuItem.Create(FMenu);
+  FMenuItems.PrintOverlayText.Caption := 'Print overlay text';
+  FMenuItems.PrintOverlayText.OnClick := PopupSetPrintOverlayText;
+  FMenu.Items.Add(FMenuItems.PrintOverlayText);
 
-  PopupMenu := FPopup;
+  PopupMenu := FMenu;
 end;
 
 class constructor TVideoWindow.Create;
@@ -225,7 +230,7 @@ destructor TVideoWindow.Destroy;
 begin
   StopLiveVideo;
   UnRegisterObj;
-  FreeAndNil(FPopup);
+  FreeAndNil(FMenu);
   FreeAndNil(FTextRectangle);
   inherited;
   FreeAndNil(FParentForm);
@@ -460,16 +465,16 @@ procedure TVideoWindow.UpdatePopupItems;
 var
   I: Integer;
 begin
-  for I := 1 to FMenuItemChannel.Count do
-    FMenuItemChannel.Items[I - 1].Checked := FChannel = FMenuItemChannel.Items
+  for I := 1 to FMenuItems.Channel.Count do
+    FMenuItems.Channel.Items[I - 1].Checked := FChannel = FMenuItems.Channel.Items
       [I - 1].Tag;
 
   if IsPlaying then
-    FMenuItemPalyStop.Caption := 'Stop'
+    FMenuItems.PalyStop.Caption := 'Stop'
   else
-    FMenuItemPalyStop.Caption := 'Play';
+    FMenuItems.PalyStop.Caption := 'Play';
 
-  FMenuItemPrintOverlayText.Checked := FShowOverlayText;
+  FMenuItems.PrintOverlayText.Checked := FShowOverlayText;
 end;
 
 { TSelfParentControl }
