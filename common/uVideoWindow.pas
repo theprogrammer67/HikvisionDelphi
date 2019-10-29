@@ -238,7 +238,7 @@ begin
 
   FTextRectangle.Canvas.Font.Size := 24;
   FTextRectangle.Canvas.Font.Name := 'Courier New';
-  Winapi.Windows.ShowWindow(FTextRectangle.Handle, SW_SHOWNORMAL);
+//  Winapi.Windows.ShowWindow(FTextRectangle.Handle, SW_SHOWNORMAL);
 end;
 
 class constructor TVideoWindow.Create;

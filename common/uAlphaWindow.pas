@@ -28,6 +28,8 @@ type
   private
     procedure ShowText;
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
+    procedure CMVisibleChanged(var Message: TMessage);
+      message CM_VISIBLECHANGED;
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -72,8 +74,8 @@ begin
   begin
     LHwnd := tagCWPRETSTRUCT(Pointer(AlParam)^).HWND;
     LMessage := tagCWPRETSTRUCT(Pointer(AlParam)^).Message;
-    LlParam := tagCWPRETSTRUCT(Pointer(AlParam)^).lParam;
-    LwParam := tagCWPRETSTRUCT(Pointer(AlParam)^).wParam;
+    LlParam := tagCWPRETSTRUCT(Pointer(AlParam)^).LPARAM;
+    LwParam := tagCWPRETSTRUCT(Pointer(AlParam)^).WPARAM;
 
     LObjects := FObjects.LockList;
     try
@@ -83,15 +85,24 @@ begin
         if LObj.FParentControl.Handle = LHwnd then
         begin
           case LMessage of
-            WM_SIZE, WM_MOVE, WM_SHOWWINDOW:
+            WM_SIZE, WM_MOVE, WM_SHOWWINDOW, CM_VISIBLECHANGED:
               SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
-           end;
+          end;
         end;
       end;
     finally
       FObjects.UnlockList;
     end;
   end;
+end;
+
+procedure TAlphaWindow.CMVisibleChanged(var Message: TMessage);
+begin
+  inherited;
+  if Visible then
+    Winapi.Windows.ShowWindow(Handle, SW_SHOWNORMAL)
+  else
+    Winapi.Windows.ShowWindow(Handle, SW_HIDE);
 end;
 
 constructor TAlphaWindow.Create(AParent: TCustomControl; AAlpha: Byte);
