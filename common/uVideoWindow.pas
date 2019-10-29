@@ -4,7 +4,7 @@ interface
 
 uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
   Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus,
-  Vcl.Forms, Winapi.Messages, System.Math;
+  Vcl.Forms, Winapi.Messages, System.Math, uAlphaWindow;
 
 const
   WM_PLAYVIDEO = WM_USER + 0;
@@ -92,7 +92,8 @@ type
     FRealHandle: Integer;
     FShowOverlayText: Boolean;
     FLastErrorDecription: string;
-    FTextRectangle: TTextRectangle;
+//    FTextRectangle: TTextRectangle;
+    FTextRectangle: TAlphaWindow;
     FEvenFrame: Boolean;
 
     FMenu: TPopupMenu;
@@ -127,6 +128,7 @@ type
     procedure SetUsed(const Value: Boolean);
     function GetOverlayText: string;
     procedure SetOverlayText(const Value: string);
+    procedure CreateTextRectangle;
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -183,7 +185,7 @@ begin
   RegisterObj;
   CreatePopupMenu;
 
-  FTextRectangle := TTextRectangle.Create(Self);
+  CreateTextRectangle;
 end;
 
 procedure TVideoWindow.CreatePopupMenu;
@@ -218,6 +220,25 @@ begin
   FMenu.Items.Add(FMenuItems.PrintOverlayText);
 
   PopupMenu := FMenu;
+end;
+
+procedure TVideoWindow.CreateTextRectangle;
+begin
+  FreeAndNil(FTextRectangle);
+
+  FTextRectangle := TAlphaWindow.Create(Self, 150);
+  FTextRectangle.Text := 'Мой дядя самых честных правил...';
+  FTextRectangle.Color := clWhite;
+  FTextRectangle.Width := 100;
+  FTextRectangle.Height := 100;
+  FTextRectangle.Left := 0;
+  FTextRectangle.Top := 0;
+  FTextRectangle.Visible := True;
+  FTextRectangle.Enabled := True;
+
+  FTextRectangle.Canvas.Font.Size := 24;
+  FTextRectangle.Canvas.Font.Name := 'Courier New';
+  Winapi.Windows.ShowWindow(FTextRectangle.Handle, SW_SHOWNORMAL);
 end;
 
 class constructor TVideoWindow.Create;
@@ -270,9 +291,9 @@ begin
     (not Used) then
     Exit;
 
-  FEvenFrame := not FEvenFrame;
-  if not FEvenFrame then // Обрабатываем только нечетные вызовы
-    FTextRectangle.DrawText(hDc);
+//  FEvenFrame := not FEvenFrame;
+//  if not FEvenFrame then // Обрабатываем только нечетные вызовы
+//    FTextRectangle.DrawText(hDc);
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
@@ -423,7 +444,7 @@ begin
   inherited;
 
   if Assigned(FTextRectangle) then
-    FTextRectangle.Resize;
+    FTextRectangle.CalcSize;
 end;
 
 procedure TVideoWindow.SetChannel(const Value: Integer);
