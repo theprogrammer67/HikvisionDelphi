@@ -3,7 +3,8 @@
 interface
 
 uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
-  System.Math, System.Generics.Collections, Winapi.Messages, System.SysUtils;
+  System.Math, System.Generics.Collections, Winapi.Messages, System.SysUtils,
+  Vcl.ExtCtrls;
 
 type
   TAlphaWindow = class(TCustomControl)
@@ -14,6 +15,8 @@ type
     FMargin: Integer;
     FWidthRelative: Integer;
     FHeightRelative: Integer;
+    FTimer: TTimer;
+    FParentPos: TPoint;
   private
     class var FParentWndHook: HHOOK;
     class var FObjects: TThreadList<TAlphaWindow>;
@@ -22,14 +25,17 @@ type
   private
     class function CallWndRetProc(ACode: Integer; AwParam: WPARAM;
       AlParam: LPARAM): LRESULT; stdcall; static;
-  private
     class procedure InstallHookParent;
     class procedure UninstallHookParent;
   private
     procedure ShowText;
+    procedure OnTimer(Sender: TObject);
+  private
+    // procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
     procedure CMVisibleChanged(var Message: TMessage);
       message CM_VISIBLECHANGED;
+    // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -37,11 +43,10 @@ type
   public
     class constructor Create;
     class destructor Destroy;
-  public
     constructor Create(AParent: TCustomControl; AAlpha: Byte); reintroduce;
     destructor Destroy; override;
   public
-    procedure CalcSize;
+    procedure CalculateSize;
   public
     property Text: string read FText write FText;
     property Margin: Integer read FMargin write FMargin;
@@ -84,10 +89,11 @@ begin
         LObj := LObjects[I];
         if LObj.FParentControl.Handle = LHwnd then
         begin
-          case LMessage of
-            WM_SIZE, WM_MOVE, WM_SHOWWINDOW, CM_VISIBLECHANGED:
-              SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
-          end;
+          SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
+          // case LMessage of
+          // WM_SIZE, WM_MOVE, WM_SHOWWINDOW, CM_VISIBLECHANGED, WM_PAINT:
+          // SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
+          // end;
         end;
       end;
     finally
@@ -110,6 +116,12 @@ begin
   inherited CreateParented(AParent.Handle);
 
   FParentControl := AParent;
+  FParentPos := Point(AParent.Left, AParent.Top);
+
+  FTimer := TTimer.Create(nil);
+  FTimer.Interval := 200;
+  FTimer.OnTimer := OnTimer;
+
   FAlpha := AAlpha;
   Canvas.Brush.Color := clWhite;
   Canvas.Brush.style := bsClear;
@@ -144,6 +156,7 @@ end;
 
 destructor TAlphaWindow.Destroy;
 begin
+  FreeAndNil(FTimer);
   UnRegisterObj;
   inherited;
 end;
@@ -158,6 +171,19 @@ class procedure TAlphaWindow.InstallHookParent;
 begin
   FParentWndHook := SetWindowsHookEx(WH_CALLWNDPROCRET, @CallWndRetProc, 0,
     GetCurrentThreadID);
+end;
+
+procedure TAlphaWindow.OnTimer(Sender: TObject);
+var
+  LPArentPos: TPoint;
+begin
+  Visible := FParentControl.Visible;
+
+  LPArentPos := Point(FParentControl.Left, FParentControl.Top);
+  if LPArentPos = FParentPos then
+    Exit;
+
+  Perform(WM_MOVE, 0, 0);
 end;
 
 procedure TAlphaWindow.Paint;
@@ -176,7 +202,7 @@ begin
   FObjects.Add(Self);
 end;
 
-procedure TAlphaWindow.CalcSize;
+procedure TAlphaWindow.CalculateSize;
 begin
   if not Assigned(FParentControl) then
     Exit;
@@ -210,7 +236,15 @@ end;
 
 procedure TAlphaWindow.WMMove(var Message: TWMMove);
 begin
+  inherited;
   Invalidate;
 end;
+
+
+// procedure TAlphaWindow.WMWindowPosChanged(var Message: TWMWindowPosChanged);
+// begin
+// inherited;
+// Invalidate;
+// end;
 
 end.

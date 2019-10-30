@@ -444,7 +444,7 @@ begin
   inherited;
 
   if Assigned(FTextRectangle) then
-    FTextRectangle.CalcSize;
+    FTextRectangle.CalculateSize;
 end;
 
 procedure TVideoWindow.SetChannel(const Value: Integer);
