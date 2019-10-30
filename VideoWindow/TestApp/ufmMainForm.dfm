@@ -2,8 +2,8 @@ object frmMainForm: TfrmMainForm
   Left = 0
   Top = 0
   Caption = 'Video window test'
-  ClientHeight = 660
-  ClientWidth = 446
+  ClientHeight = 564
+  ClientWidth = 430
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -3220,30 +3220,32 @@ object frmMainForm: TfrmMainForm
   object pnlVideo: TPanel
     Left = 0
     Top = 0
-    Width = 446
-    Height = 336
+    Width = 430
+    Height = 226
     Align = alClient
     Caption = 'pnlVideo'
     Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clLime
-    Font.Height = -40
+    Font.Color = clBlack
+    Font.Height = -20
     Font.Name = 'Courier New'
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitHeight = 249
+    ExplicitTop = 3
   end
   object pnlBottm: TPanel
     Left = 0
-    Top = 336
-    Width = 446
-    Height = 324
+    Top = 226
+    Width = 430
+    Height = 338
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 304
+    ExplicitWidth = 1090
     object btnPlayStop: TButton
-      Left = 328
-      Top = 217
+      Left = 336
+      Top = 101
       Width = 71
       Height = 25
       Caption = 'btnPlayStop'
@@ -3251,8 +3253,8 @@ object frmMainForm: TfrmMainForm
       OnClick = btnPlayStopClick
     end
     object lbledtAddress: TLabeledEdit
-      Left = 16
-      Top = 177
+      Left = 24
+      Top = 61
       Width = 161
       Height = 24
       EditLabel.Width = 46
@@ -3262,8 +3264,8 @@ object frmMainForm: TfrmMainForm
       Text = '172.20.162.43'
     end
     object lbledtPort: TLabeledEdit
-      Left = 183
-      Top = 177
+      Left = 191
+      Top = 61
       Width = 121
       Height = 24
       EditLabel.Width = 23
@@ -3274,8 +3276,8 @@ object frmMainForm: TfrmMainForm
       Text = '8000'
     end
     object lbledtUser: TLabeledEdit
-      Left = 16
-      Top = 217
+      Left = 24
+      Top = 101
       Width = 161
       Height = 24
       EditLabel.Width = 26
@@ -3285,8 +3287,8 @@ object frmMainForm: TfrmMainForm
       Text = 'admin'
     end
     object lbledtPassword: TLabeledEdit
-      Left = 183
-      Top = 217
+      Left = 191
+      Top = 101
       Width = 121
       Height = 24
       EditLabel.Width = 55
@@ -3296,8 +3298,8 @@ object frmMainForm: TfrmMainForm
       Text = 'admin12345'
     end
     object lbledtChannel: TLabeledEdit
-      Left = 328
-      Top = 177
+      Left = 336
+      Top = 61
       Width = 71
       Height = 24
       EditLabel.Width = 46
@@ -3308,8 +3310,8 @@ object frmMainForm: TfrmMainForm
       Text = '2'
     end
     object btnSetOverlayText: TButton
-      Left = 16
-      Top = 249
+      Left = 24
+      Top = 133
       Width = 113
       Height = 25
       Caption = 'Set overlay text'
@@ -3317,8 +3319,8 @@ object frmMainForm: TfrmMainForm
       OnClick = btnSetOverlayTextClick
     end
     object mmoText: TMemo
-      Left = 16
-      Top = 40
+      Left = 24
+      Top = 164
       Width = 383
       Height = 122
       Lines.Strings = (
@@ -3333,8 +3335,8 @@ object frmMainForm: TfrmMainForm
       TabOrder = 7
     end
     object chkPrintText: TCheckBox
-      Left = 152
-      Top = 257
+      Left = 160
+      Top = 141
       Width = 152
       Height = 17
       Caption = 'Print overlay text'
@@ -3344,8 +3346,8 @@ object frmMainForm: TfrmMainForm
       OnClick = chkPrintTextClick
     end
     object chkVisible: TCheckBox
-      Left = 16
-      Top = 296
+      Left = 24
+      Top = 308
       Width = 97
       Height = 17
       Caption = 'Visible'
@@ -3364,8 +3366,8 @@ object frmMainForm: TfrmMainForm
       OnClick = btnCreateViideoWindowClick
     end
     object chkBuiltIn: TCheckBox
-      Left = 183
-      Top = 20
+      Left = 191
+      Top = 17
       Width = 97
       Height = 17
       Caption = 'built-in'

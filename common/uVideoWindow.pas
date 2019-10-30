@@ -80,9 +80,6 @@ type
     ERROR_FONTSIZE = 10;
     STATUS_FONTNAME = 'Impact';
     STATUS_FONTSIZE = 24;
-    DEF_FONTNAME = 'Courier New';
-    DEF_FONTSIZE = 24;
-    DEF_FONTCOLOR = clBlack;
   private
     FId: Cardinal;
     FUsed: Boolean;
@@ -229,7 +226,7 @@ begin
   FreeAndNil(FTextRectangle);
 
   FTextRectangle := TAlphaWindow.Create(Self, 150);
-  FTextRectangle.Text := 'Мой дядя самых честных правил...';
+//  FTextRectangle.Text := 'Мой дядя самых честных правил...';
   FTextRectangle.Color := clWhite;
   FTextRectangle.Width := 100;
   FTextRectangle.Height := 100;

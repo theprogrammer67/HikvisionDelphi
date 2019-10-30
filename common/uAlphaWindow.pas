@@ -7,9 +7,14 @@ uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
   Vcl.ExtCtrls;
 
 type
+  TParentControl = class(TCustomControl)
+  public
+    property Font;
+  end;
+
   TAlphaWindow = class(TCustomControl)
   private
-    FParentControl: TCustomControl;
+    FParentControl: TParentControl;
     FUsed: Boolean;
     FAlpha: Byte;
     FText: string;
@@ -39,7 +44,7 @@ type
     procedure CMVisibleChanged(var Message: TMessage);
       message CM_VISIBLECHANGED;
     procedure SetText(const Value: string);
-//     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
+    // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -122,7 +127,7 @@ constructor TAlphaWindow.Create(AParent: TCustomControl; AAlpha: Byte);
 begin
   inherited CreateParented(AParent.Handle);
 
-  FParentControl := AParent;
+  FParentControl := TParentControl(AParent);
   FParentPos := Point(AParent.Left, AParent.Top);
 
   FTimer := TTimer.Create(nil);
@@ -133,6 +138,9 @@ begin
   Canvas.Brush.Color := clWhite;
   Canvas.Brush.style := bsClear;
   Canvas.Font.Color := clBlack;
+  Font := FParentControl.Font;
+//  Font.Name := 'Courier New';
+
   FMargin := 5;
   FWidthRelative := 50;
   FHeightRelative := 50;
@@ -240,6 +248,8 @@ begin
   if (Width <= (Margin * 2 + 1)) or (Height <= (Margin * 2 + 1)) then
     Exit;
 
+  Canvas.Font.Size := Font.Size;
+  Canvas.Font.Name := Font.Name;
   LRect := Rect(Margin, Margin, Width + Margin, Height + Margin);
   Canvas.TextRect(LRect, FText, [tfLeft, tfTop, tfWordBreak]);
 end;

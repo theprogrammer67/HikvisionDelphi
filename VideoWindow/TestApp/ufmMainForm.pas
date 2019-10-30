@@ -91,6 +91,7 @@ begin
     FVideoWindow := TVideoWindow.Create(nil);
   FVideoWindow.Align := alClient;
   FVideoWindow.Enabled := True;
+  FVideoWindow.OverlayText := mmoText.Text;
   FVideoWindow.ShowOverlayText := chkPrintText.Checked;
   FVideoWindow.Show;
 end;
