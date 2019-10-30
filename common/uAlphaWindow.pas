@@ -38,6 +38,7 @@ type
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
     procedure CMVisibleChanged(var Message: TMessage);
       message CM_VISIBLECHANGED;
+    procedure SetText(const Value: string);
 //     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
   protected
     procedure Paint; override;
@@ -51,7 +52,7 @@ type
   public
     procedure CalculateSize;
   public
-    property Text: string read FText write FText;
+    property Text: string read FText write SetText;
     property Margin: Integer read FMargin write FMargin;
     property WidthRelative: Integer read FWidthRelative write FWidthRelative;
     property HeightRelative: Integer read FHeightRelative write FHeightRelative;
@@ -132,7 +133,7 @@ begin
   Canvas.Brush.Color := clWhite;
   Canvas.Brush.style := bsClear;
   Canvas.Font.Color := clBlack;
-  FMargin := 1;
+  FMargin := 5;
   FWidthRelative := 50;
   FHeightRelative := 50;
   Color := clWhite;
@@ -181,17 +182,17 @@ end;
 
 procedure TAlphaWindow.OnTimer(Sender: TObject);
 var
-  LPArentPos: TPoint;
+  LParentPos: TPoint;
 begin
   UpdateVisible;
   if not Visible then
     Exit;
 
-  LPArentPos := FParentControl.ClientToScreen(Point(0, 0));
-  if LPArentPos = FParentPos then
+  LParentPos := FParentControl.ClientToScreen(Point(0, 0));
+  if LParentPos = FParentPos then
     Exit;
 
-  FParentPos := LPArentPos;
+  FParentPos := LParentPos;
   Perform(WM_MOVE, 0, 0);
 end;
 
@@ -200,8 +201,8 @@ var
   LLeftTop: TPoint;
 begin
   LLeftTop := FParentControl.ClientToScreen(Point(0, 0));
-  Left := LLeftTop.X;
-  Top := LLeftTop.Y;
+  Left := LLeftTop.X + Margin;
+  Top := LLeftTop.Y + Margin;
   inherited;
   ShowText;
 end;
@@ -218,6 +219,12 @@ begin
 
   Width := Max(((FParentControl.Width - Margin) * WidthRelative) div 100, 2);
   Height := Max(((FParentControl.Height - Margin) * HeightRelative) div 100, 2);
+end;
+
+procedure TAlphaWindow.SetText(const Value: string);
+begin
+  FText := Value;
+  Invalidate;
 end;
 
 procedure TAlphaWindow.SetUsed(const Value: Boolean);
