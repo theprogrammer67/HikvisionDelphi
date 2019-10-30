@@ -128,6 +128,8 @@ type
     procedure CreateTextRectangle;
     procedure SetShowOverlayText(const Value: Boolean);
     function GetShowOverlayText: Boolean;
+    function GetAlphaBlend: Byte;
+    procedure SetAlphaBlend(const Value: Byte);
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -149,6 +151,7 @@ type
     property ShowOverlayText: Boolean read GetShowOverlayText
       write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
+    property AlphaBlend: Byte read GetAlphaBlend write SetAlphaBlend;
   end;
 
 implementation
@@ -224,20 +227,7 @@ end;
 procedure TVideoWindow.CreateTextRectangle;
 begin
   FreeAndNil(FTextRectangle);
-
   FTextRectangle := TAlphaWindow.Create(Self, 150);
-//  FTextRectangle.Text := 'Мой дядя самых честных правил...';
-  FTextRectangle.Color := clWhite;
-  FTextRectangle.Width := 100;
-  FTextRectangle.Height := 100;
-  FTextRectangle.Left := 0;
-  FTextRectangle.Top := 0;
-  FTextRectangle.Visible := False;
-//  FTextRectangle.Enabled := True;
-
-  FTextRectangle.Canvas.Font.Size := 24;
-  FTextRectangle.Canvas.Font.Name := 'Courier New';
-  // Winapi.Windows.ShowWindow(FTextRectangle.Handle, SW_SHOWNORMAL);
 end;
 
 class constructor TVideoWindow.Create;
@@ -293,6 +283,11 @@ begin
   // FEvenFrame := not FEvenFrame;
   // if not FEvenFrame then // Обрабатываем только нечетные вызовы
   // FTextRectangle.DrawText(hDc);
+end;
+
+function TVideoWindow.GetAlphaBlend: Byte;
+begin
+  Result := FTextRectangle.AlphaBlend;
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
@@ -449,6 +444,11 @@ begin
 
   if Assigned(FTextRectangle) then
     FTextRectangle.CalculateSize;
+end;
+
+procedure TVideoWindow.SetAlphaBlend(const Value: Byte);
+begin
+  FTextRectangle.AlphaBlend := Value;
 end;
 
 procedure TVideoWindow.SetChannel(const Value: Integer);

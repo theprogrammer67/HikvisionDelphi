@@ -16,7 +16,7 @@ type
   private
     FParentControl: TParentControl;
     FUsed: Boolean;
-    FAlpha: Byte;
+    FAlphaBlend: Byte;
     FText: string;
     FMargin: Integer;
     FWidthRelative: Integer;
@@ -34,17 +34,21 @@ type
     class procedure InstallHookParent;
     class procedure UninstallHookParent;
   private
+    procedure WMMove(var Message: TWMMove); message WM_MOVE;
+    procedure CMVisibleChanged(var Message: TMessage);
+      message CM_VISIBLECHANGED;
+    // procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+    // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
+  private
     procedure UpdateVisible;
     procedure SetUsed(const Value: Boolean);
     procedure ShowText;
     procedure OnTimer(Sender: TObject);
-  private
-    // procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
-    procedure WMMove(var Message: TWMMove); message WM_MOVE;
-    procedure CMVisibleChanged(var Message: TMessage);
-      message CM_VISIBLECHANGED;
     procedure SetText(const Value: string);
-    // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
+    procedure SetMargin(const Value: Integer);
+    procedure SetHeightRelative(const Value: Integer);
+    procedure SetWidthRelative(const Value: Integer);
+    procedure SetAlphaBlend(const Value: Byte);
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -52,16 +56,18 @@ type
   public
     class constructor Create;
     class destructor Destroy;
-    constructor Create(AParent: TCustomControl; AAlpha: Byte); reintroduce;
+    constructor Create(AParent: TCustomControl; AAlphaBlend: Byte); reintroduce;
     destructor Destroy; override;
   public
     procedure CalculateSize;
   public
     property Text: string read FText write SetText;
-    property Margin: Integer read FMargin write FMargin;
-    property WidthRelative: Integer read FWidthRelative write FWidthRelative;
-    property HeightRelative: Integer read FHeightRelative write FHeightRelative;
+    property Margin: Integer read FMargin write SetMargin;
+    property WidthRelative: Integer read FWidthRelative write SetWidthRelative;
+    property HeightRelative: Integer read FHeightRelative
+      write SetHeightRelative;
     property Used: Boolean read FUsed write SetUsed;
+    property AlphaBlend: Byte read FAlphaBlend write SetAlphaBlend;
     property Color;
     property Canvas;
   end;
@@ -117,13 +123,13 @@ end;
 procedure TAlphaWindow.CMVisibleChanged(var Message: TMessage);
 begin
   inherited;
-  if Visible then
+  if Visible and Showing then
     Winapi.Windows.ShowWindow(Handle, SW_SHOWNORMAL)
   else
     Winapi.Windows.ShowWindow(Handle, SW_HIDE);
 end;
 
-constructor TAlphaWindow.Create(AParent: TCustomControl; AAlpha: Byte);
+constructor TAlphaWindow.Create(AParent: TCustomControl; AAlphaBlend: Byte);
 begin
   inherited CreateParented(AParent.Handle);
 
@@ -134,12 +140,12 @@ begin
   FTimer.Interval := 200;
   FTimer.OnTimer := OnTimer;
 
-  FAlpha := AAlpha;
+  FAlphaBlend := AAlphaBlend;
   Canvas.Brush.Color := clWhite;
   Canvas.Brush.style := bsClear;
-  Canvas.Font.Color := clBlack;
   Font := FParentControl.Font;
-//  Font.Name := 'Courier New';
+  Canvas.Font := Font;
+  Canvas.Font.Color := clBlack;
 
   FMargin := 5;
   FWidthRelative := 50;
@@ -166,7 +172,7 @@ end;
 procedure TAlphaWindow.CreateWindowHandle(const Params: TCreateParams);
 begin
   inherited;
-  Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlpha, LWA_ALPHA);
+  Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
 end;
 
 destructor TAlphaWindow.Destroy;
@@ -229,16 +235,44 @@ begin
   Height := Max(((FParentControl.Height - Margin) * HeightRelative) div 100, 2);
 end;
 
+procedure TAlphaWindow.SetAlphaBlend(const Value: Byte);
+begin
+  FAlphaBlend := Value;
+  Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
+end;
+
+procedure TAlphaWindow.SetHeightRelative(const Value: Integer);
+begin
+  FHeightRelative := Value;
+  if Visible then
+    Invalidate;
+end;
+
+procedure TAlphaWindow.SetMargin(const Value: Integer);
+begin
+  FMargin := Value;
+  if Visible then
+    Invalidate;
+end;
+
 procedure TAlphaWindow.SetText(const Value: string);
 begin
   FText := Value;
-  Invalidate;
+  if Visible then
+    Invalidate;
 end;
 
 procedure TAlphaWindow.SetUsed(const Value: Boolean);
 begin
   FUsed := Value;
   UpdateVisible;
+end;
+
+procedure TAlphaWindow.SetWidthRelative(const Value: Integer);
+begin
+  FWidthRelative := Value;
+  if Visible then
+    Invalidate;
 end;
 
 procedure TAlphaWindow.ShowText;
@@ -248,8 +282,8 @@ begin
   if (Width <= (Margin * 2 + 1)) or (Height <= (Margin * 2 + 1)) then
     Exit;
 
-  Canvas.Font.Size := Font.Size;
-  Canvas.Font.Name := Font.Name;
+  // Canvas.Font.Size := Font.Size;
+  // Canvas.Font.Name := Font.Name;
   LRect := Rect(Margin, Margin, Width + Margin, Height + Margin);
   Canvas.TextRect(LRect, FText, [tfLeft, tfTop, tfWordBreak]);
 end;

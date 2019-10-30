@@ -25,7 +25,9 @@ type
     chkVisible: TCheckBox;
     btnCreateViideoWindow: TButton;
     chkBuiltIn: TCheckBox;
+    btnAlphaBlend: TButton;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
+    procedure btnAlphaBlendClick(Sender: TObject);
     procedure btnCreateViideoWindowClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -81,6 +83,13 @@ begin
     btnPlayStop.Caption := 'Stop'
   else
     btnPlayStop.Caption := 'Play';
+end;
+
+procedure TfrmMainForm.btnAlphaBlendClick(Sender: TObject);
+begin
+  if not Assigned(FVideoWindow) then
+    Exit;
+  FVideoWindow.AlphaBlend := 64;
 end;
 
 procedure TfrmMainForm.btnCreateViideoWindowClick(Sender: TObject);

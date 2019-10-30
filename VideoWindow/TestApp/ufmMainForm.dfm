@@ -3231,7 +3231,6 @@ object frmMainForm: TfrmMainForm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitTop = 3
   end
   object pnlBottm: TPanel
     Left = 0
@@ -3241,8 +3240,6 @@ object frmMainForm: TfrmMainForm
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 304
-    ExplicitWidth = 1090
     object btnPlayStop: TButton
       Left = 336
       Top = 101
@@ -3374,6 +3371,15 @@ object frmMainForm: TfrmMainForm
       Checked = True
       State = cbChecked
       TabOrder = 11
+    end
+    object btnAlphaBlend: TButton
+      Left = 296
+      Top = 300
+      Width = 111
+      Height = 25
+      Caption = 'AlphaBlend'
+      TabOrder = 12
+      OnClick = btnAlphaBlendClick
     end
   end
   object appev1: TApplicationEvents
