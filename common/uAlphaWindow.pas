@@ -29,6 +29,7 @@ type
     class procedure InstallHookParent;
     class procedure UninstallHookParent;
   private
+    procedure UpdateVisible;
     procedure SetUsed(const Value: Boolean);
     procedure ShowText;
     procedure OnTimer(Sender: TObject);
@@ -37,7 +38,7 @@ type
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
     procedure CMVisibleChanged(var Message: TMessage);
       message CM_VISIBLECHANGED;
-    // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
+//     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -96,6 +97,8 @@ begin
           case LMessage of
             WM_SIZE, WM_MOVE, WM_SHOWWINDOW, CM_VISIBLECHANGED, WM_PAINT:
               SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
+            WM_WINDOWPOSCHANGED:
+              LObj.UpdateVisible;
           end;
         end;
       end;
@@ -180,7 +183,7 @@ procedure TAlphaWindow.OnTimer(Sender: TObject);
 var
   LPArentPos: TPoint;
 begin
-  Visible := FParentControl.Visible and Used;
+  UpdateVisible;
   if not Visible then
     Exit;
 
@@ -220,7 +223,7 @@ end;
 procedure TAlphaWindow.SetUsed(const Value: Boolean);
 begin
   FUsed := Value;
-  Visible := FUsed and FParentControl.Visible;
+  UpdateVisible;
 end;
 
 procedure TAlphaWindow.ShowText;
@@ -244,6 +247,11 @@ end;
 procedure TAlphaWindow.UnRegisterObj;
 begin
   FObjects.Remove(Self);
+end;
+
+procedure TAlphaWindow.UpdateVisible;
+begin
+  Visible := FParentControl.Visible and Used;
 end;
 
 procedure TAlphaWindow.WMMove(var Message: TWMMove);
