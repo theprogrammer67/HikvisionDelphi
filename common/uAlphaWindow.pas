@@ -137,7 +137,7 @@ begin
   FParentPos := Point(AParent.Left, AParent.Top);
 
   FTimer := TTimer.Create(nil);
-  FTimer.Interval := 200;
+  FTimer.Interval := 150;
   FTimer.OnTimer := OnTimer;
 
   FAlphaBlend := AAlphaBlend;
