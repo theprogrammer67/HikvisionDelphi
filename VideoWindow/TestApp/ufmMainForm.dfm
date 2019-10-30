@@ -2,7 +2,7 @@ object frmMainForm: TfrmMainForm
   Left = 0
   Top = 0
   Caption = 'Video window test'
-  ClientHeight = 570
+  ClientHeight = 660
   ClientWidth = 446
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -3217,125 +3217,12 @@ object frmMainForm: TfrmMainForm
   OnDestroy = FormDestroy
   PixelsPerInch = 120
   TextHeight = 16
-  object btnPlayStop: TButton
-    Left = 344
-    Top = 345
-    Width = 71
-    Height = 25
-    Caption = 'btnPlayStop'
-    TabOrder = 0
-    OnClick = btnPlayStopClick
-  end
-  object lbledtAddress: TLabeledEdit
-    Left = 32
-    Top = 305
-    Width = 161
-    Height = 24
-    EditLabel.Width = 46
-    EditLabel.Height = 16
-    EditLabel.Caption = 'Address'
-    TabOrder = 1
-    Text = '172.20.162.43'
-  end
-  object lbledtPort: TLabeledEdit
-    Left = 199
-    Top = 305
-    Width = 121
-    Height = 24
-    EditLabel.Width = 23
-    EditLabel.Height = 16
-    EditLabel.Caption = 'Port'
-    NumbersOnly = True
-    TabOrder = 2
-    Text = '8000'
-  end
-  object lbledtUser: TLabeledEdit
-    Left = 32
-    Top = 345
-    Width = 161
-    Height = 24
-    EditLabel.Width = 26
-    EditLabel.Height = 16
-    EditLabel.Caption = 'User'
-    TabOrder = 3
-    Text = 'admin'
-  end
-  object lbledtPassword: TLabeledEdit
-    Left = 199
-    Top = 345
-    Width = 121
-    Height = 24
-    EditLabel.Width = 55
-    EditLabel.Height = 16
-    EditLabel.Caption = 'Password'
-    TabOrder = 4
-    Text = 'admin12345'
-  end
-  object lbledtChannel: TLabeledEdit
-    Left = 344
-    Top = 305
-    Width = 71
-    Height = 24
-    EditLabel.Width = 46
-    EditLabel.Height = 16
-    EditLabel.Caption = 'Channel'
-    NumbersOnly = True
-    TabOrder = 5
-    Text = '2'
-  end
-  object btnSetOverlayText: TButton
-    Left = 32
-    Top = 385
-    Width = 113
-    Height = 25
-    Caption = 'Set overlay text'
-    TabOrder = 6
-    OnClick = btnSetOverlayTextClick
-  end
-  object mmoText: TMemo
-    Left = 32
-    Top = 416
-    Width = 383
-    Height = 122
-    Lines.Strings = (
-      #1052#1086#1081' '#1076#1103#1076#1103' '#1089#1072#1084#1099#1093' '#1095#1077#1089#1090#1085#1099#1093' '#1087#1088#1072#1074#1080#1083','
-      #1050#1086#1075#1076#1072' '#1085#1077' '#1074' '#1096#1091#1090#1082#1091' '#1079#1072#1085#1077#1084#1086#1075','
-      #1054#1085' '#1091#1074#1072#1078#1072#1090#1100' '#1089#1077#1073#1103' '#1079#1072#1089#1090#1072#1074#1080#1083
-      #1048' '#1083#1091#1095#1096#1077' '#1074#1099#1076#1091#1084#1072#1090#1100' '#1085#1077' '#1084#1086#1075'.'
-      #1045#1075#1086' '#1087#1088#1080#1084#1077#1088' '#1076#1088#1091#1075#1080#1084' '#1085#1072#1091#1082#1072';'
-      #1053#1086', '#1073#1086#1078#1077' '#1084#1086#1081', '#1082#1072#1082#1072#1103' '#1089#1082#1091#1082#1072
-      #1057' '#1073#1086#1083#1100#1085#1099#1084' '#1089#1080#1076#1077#1090#1100' '#1080' '#1076#1077#1085#1100' '#1080' '#1085#1086#1095#1100','
-      #1053#1077' '#1086#1090#1093#1086#1076#1103' '#1085#1080' '#1096#1072#1075#1091' '#1087#1088#1086#1095#1100'!')
-    TabOrder = 7
-  end
-  object chkPrintText: TCheckBox
-    Left = 168
-    Top = 393
-    Width = 152
-    Height = 17
-    Caption = 'Print overlay text'
-    Checked = True
-    State = cbChecked
-    TabOrder = 8
-    OnClick = chkPrintTextClick
-  end
-  object chkVisible: TCheckBox
-    Left = 32
-    Top = 544
-    Width = 97
-    Height = 17
-    Caption = 'Visible'
-    Checked = True
-    State = cbChecked
-    TabOrder = 9
-    OnClick = chkVisibleClick
-  end
   object pnlVideo: TPanel
     Left = 0
     Top = 0
     Width = 446
-    Height = 249
-    Align = alTop
+    Height = 336
+    Align = alClient
     Caption = 'pnlVideo'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clLime
@@ -3343,26 +3230,149 @@ object frmMainForm: TfrmMainForm
     Font.Name = 'Courier New'
     Font.Style = []
     ParentFont = False
-    TabOrder = 10
+    TabOrder = 0
+    ExplicitHeight = 249
   end
-  object btnCreateViideoWindow: TButton
-    Left = 32
-    Top = 255
-    Width = 153
-    Height = 25
-    Caption = 'Create video window'
-    TabOrder = 11
-    OnClick = btnCreateViideoWindowClick
-  end
-  object chkBuiltIn: TCheckBox
-    Left = 199
-    Top = 260
-    Width = 97
-    Height = 17
-    Caption = 'built-in'
-    Checked = True
-    State = cbChecked
-    TabOrder = 12
+  object pnlBottm: TPanel
+    Left = 0
+    Top = 336
+    Width = 446
+    Height = 324
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 1
+    object btnPlayStop: TButton
+      Left = 328
+      Top = 217
+      Width = 71
+      Height = 25
+      Caption = 'btnPlayStop'
+      TabOrder = 0
+      OnClick = btnPlayStopClick
+    end
+    object lbledtAddress: TLabeledEdit
+      Left = 16
+      Top = 177
+      Width = 161
+      Height = 24
+      EditLabel.Width = 46
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Address'
+      TabOrder = 1
+      Text = '172.20.162.43'
+    end
+    object lbledtPort: TLabeledEdit
+      Left = 183
+      Top = 177
+      Width = 121
+      Height = 24
+      EditLabel.Width = 23
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Port'
+      NumbersOnly = True
+      TabOrder = 2
+      Text = '8000'
+    end
+    object lbledtUser: TLabeledEdit
+      Left = 16
+      Top = 217
+      Width = 161
+      Height = 24
+      EditLabel.Width = 26
+      EditLabel.Height = 16
+      EditLabel.Caption = 'User'
+      TabOrder = 3
+      Text = 'admin'
+    end
+    object lbledtPassword: TLabeledEdit
+      Left = 183
+      Top = 217
+      Width = 121
+      Height = 24
+      EditLabel.Width = 55
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Password'
+      TabOrder = 4
+      Text = 'admin12345'
+    end
+    object lbledtChannel: TLabeledEdit
+      Left = 328
+      Top = 177
+      Width = 71
+      Height = 24
+      EditLabel.Width = 46
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Channel'
+      NumbersOnly = True
+      TabOrder = 5
+      Text = '2'
+    end
+    object btnSetOverlayText: TButton
+      Left = 16
+      Top = 249
+      Width = 113
+      Height = 25
+      Caption = 'Set overlay text'
+      TabOrder = 6
+      OnClick = btnSetOverlayTextClick
+    end
+    object mmoText: TMemo
+      Left = 16
+      Top = 40
+      Width = 383
+      Height = 122
+      Lines.Strings = (
+        #1052#1086#1081' '#1076#1103#1076#1103' '#1089#1072#1084#1099#1093' '#1095#1077#1089#1090#1085#1099#1093' '#1087#1088#1072#1074#1080#1083','
+        #1050#1086#1075#1076#1072' '#1085#1077' '#1074' '#1096#1091#1090#1082#1091' '#1079#1072#1085#1077#1084#1086#1075','
+        #1054#1085' '#1091#1074#1072#1078#1072#1090#1100' '#1089#1077#1073#1103' '#1079#1072#1089#1090#1072#1074#1080#1083
+        #1048' '#1083#1091#1095#1096#1077' '#1074#1099#1076#1091#1084#1072#1090#1100' '#1085#1077' '#1084#1086#1075'.'
+        #1045#1075#1086' '#1087#1088#1080#1084#1077#1088' '#1076#1088#1091#1075#1080#1084' '#1085#1072#1091#1082#1072';'
+        #1053#1086', '#1073#1086#1078#1077' '#1084#1086#1081', '#1082#1072#1082#1072#1103' '#1089#1082#1091#1082#1072
+        #1057' '#1073#1086#1083#1100#1085#1099#1084' '#1089#1080#1076#1077#1090#1100' '#1080' '#1076#1077#1085#1100' '#1080' '#1085#1086#1095#1100','
+        #1053#1077' '#1086#1090#1093#1086#1076#1103' '#1085#1080' '#1096#1072#1075#1091' '#1087#1088#1086#1095#1100'!')
+      TabOrder = 7
+    end
+    object chkPrintText: TCheckBox
+      Left = 152
+      Top = 257
+      Width = 152
+      Height = 17
+      Caption = 'Print overlay text'
+      Checked = True
+      State = cbChecked
+      TabOrder = 8
+      OnClick = chkPrintTextClick
+    end
+    object chkVisible: TCheckBox
+      Left = 16
+      Top = 296
+      Width = 97
+      Height = 17
+      Caption = 'Visible'
+      Checked = True
+      State = cbChecked
+      TabOrder = 9
+      OnClick = chkVisibleClick
+    end
+    object btnCreateViideoWindow: TButton
+      Left = 24
+      Top = 9
+      Width = 153
+      Height = 25
+      Caption = 'Create video window'
+      TabOrder = 10
+      OnClick = btnCreateViideoWindowClick
+    end
+    object chkBuiltIn: TCheckBox
+      Left = 183
+      Top = 20
+      Width = 97
+      Height = 17
+      Caption = 'built-in'
+      Checked = True
+      State = cbChecked
+      TabOrder = 11
+    end
   end
   object appev1: TApplicationEvents
     OnIdle = appev1Idle

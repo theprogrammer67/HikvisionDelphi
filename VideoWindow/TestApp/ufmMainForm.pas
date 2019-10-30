@@ -10,18 +10,19 @@ uses
 
 type
   TfrmMainForm = class(TForm)
+    appev1: TApplicationEvents;
+    pnlVideo: TPanel;
+    pnlBottm: TPanel;
     btnPlayStop: TButton;
     lbledtAddress: TLabeledEdit;
     lbledtPort: TLabeledEdit;
     lbledtUser: TLabeledEdit;
     lbledtPassword: TLabeledEdit;
     lbledtChannel: TLabeledEdit;
-    appev1: TApplicationEvents;
     btnSetOverlayText: TButton;
     mmoText: TMemo;
     chkPrintText: TCheckBox;
     chkVisible: TCheckBox;
-    pnlVideo: TPanel;
     btnCreateViideoWindow: TButton;
     chkBuiltIn: TCheckBox;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
