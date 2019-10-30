@@ -10,6 +10,7 @@ type
   TAlphaWindow = class(TCustomControl)
   private
     FParentControl: TCustomControl;
+    FUsed: Boolean;
     FAlpha: Byte;
     FText: string;
     FMargin: Integer;
@@ -28,6 +29,7 @@ type
     class procedure InstallHookParent;
     class procedure UninstallHookParent;
   private
+    procedure SetUsed(const Value: Boolean);
     procedure ShowText;
     procedure OnTimer(Sender: TObject);
   private
@@ -52,6 +54,7 @@ type
     property Margin: Integer read FMargin write FMargin;
     property WidthRelative: Integer read FWidthRelative write FWidthRelative;
     property HeightRelative: Integer read FHeightRelative write FHeightRelative;
+    property Used: Boolean read FUsed write SetUsed;
     property Color;
     property Canvas;
   end;
@@ -89,11 +92,11 @@ begin
         LObj := LObjects[I];
         if LObj.FParentControl.Handle = LHwnd then
         begin
-          SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
-          // case LMessage of
-          // WM_SIZE, WM_MOVE, WM_SHOWWINDOW, CM_VISIBLECHANGED, WM_PAINT:
           // SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
-          // end;
+          case LMessage of
+            WM_SIZE, WM_MOVE, WM_SHOWWINDOW, CM_VISIBLECHANGED, WM_PAINT:
+              SendMessage(LObj.Handle, LMessage, LwParam, LlParam);
+          end;
         end;
       end;
     finally
@@ -177,12 +180,15 @@ procedure TAlphaWindow.OnTimer(Sender: TObject);
 var
   LPArentPos: TPoint;
 begin
-  Visible := FParentControl.Visible;
+  Visible := FParentControl.Visible and Used;
+  if not Visible then
+    Exit;
 
-  LPArentPos := Point(FParentControl.Left, FParentControl.Top);
+  LPArentPos := FParentControl.ClientToScreen(Point(0, 0));
   if LPArentPos = FParentPos then
     Exit;
 
+  FParentPos := LPArentPos;
   Perform(WM_MOVE, 0, 0);
 end;
 
@@ -209,6 +215,12 @@ begin
 
   Width := Max(((FParentControl.Width - Margin) * WidthRelative) div 100, 2);
   Height := Max(((FParentControl.Height - Margin) * HeightRelative) div 100, 2);
+end;
+
+procedure TAlphaWindow.SetUsed(const Value: Boolean);
+begin
+  FUsed := Value;
+  Visible := FUsed and FParentControl.Visible;
 end;
 
 procedure TAlphaWindow.ShowText;

@@ -33,6 +33,7 @@ type
     procedure chkPrintTextClick(Sender: TObject);
     procedure chkVisibleClick(Sender: TObject);
   private
+    FLibHandle: THandle;
     FUserID: Integer;
     FVideoWindow: TVideoWindow;
     FSDKInited: Boolean;
@@ -49,6 +50,20 @@ var
 implementation
 
 uses uHikvisionErrors;
+
+function GetModuleFileNameStr: string;
+var
+  Buffer: array [0 .. MAX_PATH] of Char;
+begin
+  FillChar(Buffer, MAX_PATH, #0);
+  GetModuleFileName(hInstance, Buffer, MAX_PATH);
+  Result := Buffer;
+end;
+
+function GetModuleDirectory: string;
+begin
+  Result := IncludeTrailingPathDelimiter(ExtractFileDir(GetModuleFileNameStr));
+end;
 
 {$R *.dfm}
 
@@ -75,6 +90,7 @@ begin
     FVideoWindow := TVideoWindow.Create(nil);
   FVideoWindow.Align := alClient;
   FVideoWindow.Enabled := True;
+  FVideoWindow.ShowOverlayText := chkPrintText.Checked;
   FVideoWindow.Show;
 end;
 
@@ -83,12 +99,15 @@ begin
   if FSDKInited then
     NET_DVR_Cleanup;
   FreeAndNil(FVideoWindow);
+  FreeLib(FLibHandle);
 end;
 
 procedure TfrmMainForm.Play;
 var
   LDeviceInfo: NET_DVR_DEVICEINFO_V30;
 begin
+  if not Assigned(FVideoWindow) then
+    Exit;
   Stop;
 
   FVideoWindow.Channel := StrToInt(lbledtChannel.Text);
@@ -101,24 +120,29 @@ begin
   end;
 
   ZeroMemory(@LDeviceInfo, SizeOf(LDeviceInfo));
-  FUserID := NET_DVR_Login_V30(PAnsiChar(AnsiString(lbledtAddress.Text)),
-    StrToInt(lbledtPort.Text), PAnsiChar(AnsiString(lbledtUser.Text)),
+  FVideoWindow.UserID := NET_DVR_Login_V30
+    (PAnsiChar(AnsiString(lbledtAddress.Text)), StrToInt(lbledtPort.Text),
+    PAnsiChar(AnsiString(lbledtUser.Text)),
     PAnsiChar(AnsiString(lbledtPassword.Text)), LDeviceInfo);
-  if FUserID < 0 then
+  if FVideoWindow.UserID < 0 then
     RaiseLastHVError;
 
-  FVideoWindow.Play(FUserID);
+  FVideoWindow.PlayLiveVideo;
 end;
 
 procedure TfrmMainForm.Stop;
 begin
-  FVideoWindow.Stop;
-  FVideoWindow.Invalidate;
+  if Assigned(FVideoWindow) then
+  begin
+    FVideoWindow.StopLiveVideo;
+    FVideoWindow.Invalidate;
+  end;
 end;
 
 procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
   FSDKInited := False;
+  LoadLib(FLibHandle, GetModuleDirectory);
 end;
 
 procedure TfrmMainForm.btnPlayStopClick(Sender: TObject);
@@ -134,18 +158,23 @@ end;
 
 procedure TfrmMainForm.btnSetOverlayTextClick(Sender: TObject);
 begin
-  FVideoWindow.OverlayText := mmoText.Text;
-  FVideoWindow.PrintOverlayText := chkPrintText.Checked;
+  if Assigned(FVideoWindow) then
+  begin
+    FVideoWindow.OverlayText := mmoText.Text;
+    FVideoWindow.ShowOverlayText := chkPrintText.Checked;
+  end;
 end;
 
 procedure TfrmMainForm.chkPrintTextClick(Sender: TObject);
 begin
-  FVideoWindow.PrintOverlayText := chkPrintText.Checked;
+  if Assigned(FVideoWindow) then
+    FVideoWindow.ShowOverlayText := chkPrintText.Checked;
 end;
 
 procedure TfrmMainForm.chkVisibleClick(Sender: TObject);
 begin
-  FVideoWindow.Visible := chkVisible.Checked;
+  if Assigned(FVideoWindow) then
+    FVideoWindow.Visible := chkVisible.Checked;
 end;
 
 end.

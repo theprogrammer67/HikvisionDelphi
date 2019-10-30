@@ -5,7 +5,8 @@ uses
   ufmMainForm in 'ufmMainForm.pas' {frmMainForm},
   uCHCNetSDK in '..\..\common\uCHCNetSDK.pas',
   uHikvisionErrors in '..\..\common\uHikvisionErrors.pas',
-  uVideoWindow in '..\..\common\uVideoWindow.pas';
+  uVideoWindow in '..\..\common\uVideoWindow.pas',
+  uAlphaWindow in '..\..\common\uAlphaWindow.pas';
 
 {$R *.res}
 

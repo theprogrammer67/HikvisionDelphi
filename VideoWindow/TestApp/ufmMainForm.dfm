@@ -3310,10 +3310,12 @@ object frmMainForm: TfrmMainForm
   end
   object chkPrintText: TCheckBox
     Left = 168
-    Top = 389
+    Top = 393
     Width = 152
     Height = 17
     Caption = 'Print overlay text'
+    Checked = True
+    State = cbChecked
     TabOrder = 8
     OnClick = chkPrintTextClick
   end
@@ -3345,7 +3347,7 @@ object frmMainForm: TfrmMainForm
   end
   object btnCreateViideoWindow: TButton
     Left = 32
-    Top = 256
+    Top = 255
     Width = 153
     Height = 25
     Caption = 'Create video window'

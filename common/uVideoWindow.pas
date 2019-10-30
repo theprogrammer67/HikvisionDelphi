@@ -90,9 +90,9 @@ type
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
-    FShowOverlayText: Boolean;
+    // FShowOverlayText: Boolean;
     FLastErrorDecription: string;
-//    FTextRectangle: TTextRectangle;
+    // FTextRectangle: TTextRectangle;
     FTextRectangle: TAlphaWindow;
     FEvenFrame: Boolean;
 
@@ -129,6 +129,8 @@ type
     function GetOverlayText: string;
     procedure SetOverlayText(const Value: string);
     procedure CreateTextRectangle;
+    procedure SetShowOverlayText(const Value: Boolean);
+    function GetShowOverlayText: Boolean;
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -147,8 +149,8 @@ type
     property Channel: Integer read FChannel write SetChannel;
     property OverlayText: string read GetOverlayText write SetOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
-    property ShowOverlayText: Boolean read FShowOverlayText
-      write FShowOverlayText;
+    property ShowOverlayText: Boolean read GetShowOverlayText
+      write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
   end;
 
@@ -233,12 +235,12 @@ begin
   FTextRectangle.Height := 100;
   FTextRectangle.Left := 0;
   FTextRectangle.Top := 0;
-  FTextRectangle.Visible := True;
-  FTextRectangle.Enabled := True;
+  FTextRectangle.Visible := False;
+//  FTextRectangle.Enabled := True;
 
   FTextRectangle.Canvas.Font.Size := 24;
   FTextRectangle.Canvas.Font.Name := 'Courier New';
-//  Winapi.Windows.ShowWindow(FTextRectangle.Handle, SW_SHOWNORMAL);
+  // Winapi.Windows.ShowWindow(FTextRectangle.Handle, SW_SHOWNORMAL);
 end;
 
 class constructor TVideoWindow.Create;
@@ -287,13 +289,13 @@ end;
 
 procedure TVideoWindow.DrawFunction(hDc: IntPtr);
 begin
-  if (not FShowOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
-    (not Used) then
-    Exit;
+  // if (not FShowOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
+  // (not Used) then
+  // Exit;
 
-//  FEvenFrame := not FEvenFrame;
-//  if not FEvenFrame then // Обрабатываем только нечетные вызовы
-//    FTextRectangle.DrawText(hDc);
+  // FEvenFrame := not FEvenFrame;
+  // if not FEvenFrame then // Обрабатываем только нечетные вызовы
+  // FTextRectangle.DrawText(hDc);
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
@@ -304,6 +306,11 @@ end;
 function TVideoWindow.GetOverlayText: string;
 begin
   Result := FTextRectangle.Text;
+end;
+
+function TVideoWindow.GetShowOverlayText: Boolean;
+begin
+  Result := FTextRectangle.Used;
 end;
 
 procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -459,7 +466,14 @@ end;
 
 procedure TVideoWindow.SetOverlayText(const Value: string);
 begin
-  FTextRectangle.Text := Value;
+  if Assigned(FTextRectangle) then
+    FTextRectangle.Text := Value;
+end;
+
+procedure TVideoWindow.SetShowOverlayText(const Value: Boolean);
+begin
+  if Assigned(FTextRectangle) then
+    FTextRectangle.Used := Value;
 end;
 
 procedure TVideoWindow.SetUsed(const Value: Boolean);
@@ -487,15 +501,15 @@ var
   I: Integer;
 begin
   for I := 1 to FMenuItems.Channel.Count do
-    FMenuItems.Channel.Items[I - 1].Checked := FChannel = FMenuItems.Channel.Items
-      [I - 1].Tag;
+    FMenuItems.Channel.Items[I - 1].Checked :=
+      FChannel = FMenuItems.Channel.Items[I - 1].Tag;
 
   if IsPlaying then
     FMenuItems.PalyStop.Caption := 'Stop'
   else
     FMenuItems.PalyStop.Caption := 'Play';
 
-  FMenuItems.PrintOverlayText.Checked := FShowOverlayText;
+  FMenuItems.PrintOverlayText.Checked := ShowOverlayText;
 end;
 
 { TSelfParentControl }
