@@ -2,7 +2,7 @@ object frmMainForm: TfrmMainForm
   Left = 0
   Top = 0
   Caption = 'Video window test'
-  ClientHeight = 564
+  ClientHeight = 667
   ClientWidth = 430
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -3221,7 +3221,7 @@ object frmMainForm: TfrmMainForm
     Left = 0
     Top = 0
     Width = 430
-    Height = 226
+    Height = 256
     Align = alClient
     Caption = 'pnlVideo'
     Font.Charset = RUSSIAN_CHARSET
@@ -3231,15 +3231,30 @@ object frmMainForm: TfrmMainForm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    ExplicitHeight = 226
   end
   object pnlBottm: TPanel
     Left = 0
-    Top = 226
+    Top = 256
     Width = 430
-    Height = 338
+    Height = 411
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    object lblBrightness: TLabel
+      Left = 32
+      Top = 292
+      Width = 64
+      Height = 16
+      Caption = 'Brightness:'
+    end
+    object lblAlphaBlend: TLabel
+      Left = 32
+      Top = 328
+      Width = 68
+      Height = 16
+      Caption = 'AlphaBlend:'
+    end
     object btnPlayStop: TButton
       Left = 336
       Top = 101
@@ -3344,7 +3359,7 @@ object frmMainForm: TfrmMainForm
     end
     object chkVisible: TCheckBox
       Left = 24
-      Top = 308
+      Top = 380
       Width = 97
       Height = 17
       Caption = 'Visible'
@@ -3372,14 +3387,28 @@ object frmMainForm: TfrmMainForm
       State = cbChecked
       TabOrder = 11
     end
-    object btnAlphaBlend: TButton
-      Left = 296
-      Top = 300
-      Width = 111
-      Height = 25
-      Caption = 'AlphaBlend'
+    object trckbrBrightness: TTrackBar
+      Left = 128
+      Top = 292
+      Width = 279
+      Height = 33
+      Max = 100
+      Min = -100
+      ShowSelRange = False
       TabOrder = 12
-      OnClick = btnAlphaBlendClick
+      TickStyle = tsNone
+      OnChange = trckbrBrightnessChange
+    end
+    object trckbrAlphaBlend: TTrackBar
+      Left = 128
+      Top = 331
+      Width = 279
+      Height = 25
+      Max = 255
+      ShowSelRange = False
+      TabOrder = 13
+      TickStyle = tsNone
+      OnChange = trckbrAlphaBlendChange
     end
   end
   object appev1: TApplicationEvents

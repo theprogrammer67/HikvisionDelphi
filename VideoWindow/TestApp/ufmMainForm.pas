@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, uVideoWindow, uCHCNetSDK,
-  Vcl.ExtCtrls, Vcl.AppEvnts;
+  Vcl.ExtCtrls, Vcl.AppEvnts, Vcl.ComCtrls;
 
 type
   TfrmMainForm = class(TForm)
@@ -25,9 +25,11 @@ type
     chkVisible: TCheckBox;
     btnCreateViideoWindow: TButton;
     chkBuiltIn: TCheckBox;
-    btnAlphaBlend: TButton;
+    trckbrBrightness: TTrackBar;
+    trckbrAlphaBlend: TTrackBar;
+    lblBrightness: TLabel;
+    lblAlphaBlend: TLabel;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
-    procedure btnAlphaBlendClick(Sender: TObject);
     procedure btnCreateViideoWindowClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -35,9 +37,11 @@ type
     procedure btnSetOverlayTextClick(Sender: TObject);
     procedure chkPrintTextClick(Sender: TObject);
     procedure chkVisibleClick(Sender: TObject);
+    procedure trckbrAlphaBlendChange(Sender: TObject);
+    procedure trckbrBrightnessChange(Sender: TObject);
   private
     FLibHandle: THandle;
-    FUserID: Integer;
+//    FUserID: Integer;
     FVideoWindow: TVideoWindow;
     FSDKInited: Boolean;
   private
@@ -85,13 +89,6 @@ begin
     btnPlayStop.Caption := 'Play';
 end;
 
-procedure TfrmMainForm.btnAlphaBlendClick(Sender: TObject);
-begin
-  if not Assigned(FVideoWindow) then
-    Exit;
-  FVideoWindow.AlphaBlend := 64;
-end;
-
 procedure TfrmMainForm.btnCreateViideoWindowClick(Sender: TObject);
 begin
   if chkBuiltIn.Checked then
@@ -103,6 +100,9 @@ begin
   FVideoWindow.OverlayText := mmoText.Text;
   FVideoWindow.ShowOverlayText := chkPrintText.Checked;
   FVideoWindow.Show;
+
+  trckbrBrightness.Position := FVideoWindow.TextPanel.Brightness;
+  trckbrAlphaBlend.Position := FVideoWindow.TextPanel.AlphaBlend;
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
@@ -186,6 +186,18 @@ procedure TfrmMainForm.chkVisibleClick(Sender: TObject);
 begin
   if Assigned(FVideoWindow) then
     FVideoWindow.Visible := chkVisible.Checked;
+end;
+
+procedure TfrmMainForm.trckbrAlphaBlendChange(Sender: TObject);
+begin
+  if Assigned(FVideoWindow) then
+    FVideoWindow.TextPanel.AlphaBlend := trckbrAlphaBlend.Position;
+end;
+
+procedure TfrmMainForm.trckbrBrightnessChange(Sender: TObject);
+begin
+  if Assigned(FVideoWindow) then
+    FVideoWindow.TextPanel.Brightness := trckbrBrightness.Position;
 end;
 
 end.

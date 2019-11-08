@@ -11,6 +11,11 @@ uses
 {$R *.res}
 
 begin
+{$IFDEF DEBUG}
+  // Для отображения утечек памяти, если они есть
+  ReportMemoryLeaksOnShutdown := True;
+{$ENDIF}
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfrmMainForm, frmMainForm);

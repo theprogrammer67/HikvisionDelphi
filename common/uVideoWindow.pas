@@ -64,7 +64,7 @@ type
   end;
 
   TVideoWindow = class(TSelfParentControl)
-  type
+  private type
     TMenuItems = record
       Channel: TMenuItem;
       PrintOverlayText: TMenuItem;
@@ -80,6 +80,7 @@ type
     ERROR_FONTSIZE = 10;
     STATUS_FONTNAME = 'Impact';
     STATUS_FONTSIZE = 24;
+    DEF_ALPHABLEND = 191;
   private
     FId: Cardinal;
     FUsed: Boolean;
@@ -90,8 +91,8 @@ type
     // FShowOverlayText: Boolean;
     FLastErrorDecription: string;
     // FTextRectangle: TTextRectangle;
-    FTextRectangle: TAlphaWindow;
-    FEvenFrame: Boolean;
+    FTextPanel: TAlphaWindow;
+    // FEvenFrame: Boolean;
 
     FMenu: TPopupMenu;
     FMenuItems: TMenuItems;
@@ -103,6 +104,8 @@ type
   public
     class constructor Create;
     class destructor Destroy;
+    constructor Create(AParent: TWinControl); reintroduce;
+    destructor Destroy; override;
   private
     class procedure DrawFun(lRealHandle: LongInt; hDc: IntPtr; dwUser: UINT);
       stdcall; static;
@@ -125,19 +128,14 @@ type
     procedure SetUsed(const Value: Boolean);
     function GetOverlayText: string;
     procedure SetOverlayText(const Value: string);
-    procedure CreateTextRectangle;
+    procedure CreateTextPanel;
     procedure SetShowOverlayText(const Value: Boolean);
     function GetShowOverlayText: Boolean;
-    function GetAlphaBlend: Byte;
-    procedure SetAlphaBlend(const Value: Byte);
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure Paint; override;
     procedure Resize; override;
-  public
-    constructor Create(AParent: TWinControl); reintroduce;
-    destructor Destroy; override;
   public
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
@@ -151,7 +149,7 @@ type
     property ShowOverlayText: Boolean read GetShowOverlayText
       write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
-    property AlphaBlend: Byte read GetAlphaBlend write SetAlphaBlend;
+    property TextPanel: TAlphaWindow read FTextPanel write FTextPanel;
   end;
 
 implementation
@@ -187,7 +185,7 @@ begin
   RegisterObj;
   CreatePopupMenu;
 
-  CreateTextRectangle;
+  CreateTextPanel;
 end;
 
 procedure TVideoWindow.CreatePopupMenu;
@@ -224,10 +222,10 @@ begin
   PopupMenu := FMenu;
 end;
 
-procedure TVideoWindow.CreateTextRectangle;
+procedure TVideoWindow.CreateTextPanel;
 begin
-  FreeAndNil(FTextRectangle);
-  FTextRectangle := TAlphaWindow.Create(Self, 150);
+  FreeAndNil(FTextPanel);
+  FTextPanel := TAlphaWindow.Create(Self, DEF_ALPHABLEND);
 end;
 
 class constructor TVideoWindow.Create;
@@ -241,7 +239,7 @@ begin
   StopLiveVideo;
   UnRegisterObj;
   FreeAndNil(FMenu);
-  FreeAndNil(FTextRectangle);
+  FreeAndNil(FTextPanel);
   inherited;
   FreeAndNil(FParentForm);
 end;
@@ -285,11 +283,6 @@ begin
   // FTextRectangle.DrawText(hDc);
 end;
 
-function TVideoWindow.GetAlphaBlend: Byte;
-begin
-  Result := FTextRectangle.AlphaBlend;
-end;
-
 function TVideoWindow.GetIsPlaying: Boolean;
 begin
   Result := FRealHandle >= 0;
@@ -297,12 +290,12 @@ end;
 
 function TVideoWindow.GetOverlayText: string;
 begin
-  Result := FTextRectangle.Text;
+  Result := FTextPanel.Text;
 end;
 
 function TVideoWindow.GetShowOverlayText: Boolean;
 begin
-  Result := FTextRectangle.Used;
+  Result := FTextPanel.Used;
 end;
 
 procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -367,7 +360,7 @@ begin
   FRealHandle := NET_DVR_RealPlay_V40(UserID, LPreviewInfo, nil, 0);
   if FRealHandle < 0 then
     RaiseLastHVError;
-  FEvenFrame := False;
+  // FEvenFrame := False;
   if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
     RaiseLastHVError;
 end;
@@ -442,13 +435,8 @@ procedure TVideoWindow.Resize;
 begin
   inherited;
 
-  if Assigned(FTextRectangle) then
-    FTextRectangle.CalculateSize;
-end;
-
-procedure TVideoWindow.SetAlphaBlend(const Value: Byte);
-begin
-  FTextRectangle.AlphaBlend := Value;
+  if Assigned(FTextPanel) then
+    FTextPanel.CalculateSize;
 end;
 
 procedure TVideoWindow.SetChannel(const Value: Integer);
@@ -463,14 +451,14 @@ end;
 
 procedure TVideoWindow.SetOverlayText(const Value: string);
 begin
-  if Assigned(FTextRectangle) then
-    FTextRectangle.Text := Value;
+  if Assigned(FTextPanel) then
+    FTextPanel.Text := Value;
 end;
 
 procedure TVideoWindow.SetShowOverlayText(const Value: Boolean);
 begin
-  if Assigned(FTextRectangle) then
-    FTextRectangle.Used := Value;
+  if Assigned(FTextPanel) then
+    FTextPanel.Used := Value;
 end;
 
 procedure TVideoWindow.SetUsed(const Value: Boolean);

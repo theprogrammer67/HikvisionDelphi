@@ -4,7 +4,7 @@ interface
 
 uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
   System.Math, System.Generics.Collections, Winapi.Messages, System.SysUtils,
-  Vcl.ExtCtrls;
+  Vcl.ExtCtrls, Vcl.Menus;
 
 type
   TParentControl = class(TCustomControl)
@@ -13,16 +13,46 @@ type
   end;
 
   TAlphaWindow = class(TCustomControl)
+  private type
+    TColorScheme = (csWhiteBlack, csRedBlack, csGreenBlack, csBlueBlack,
+      csBlackWhite, csRedWhite, csGreenWhite, csBlueWhite);
+
+    TColorSchemeParams = record
+      Name: string;
+      BgColor: TColor;
+      FontColor: TColor;
+    end;
+
+    TMenuItems = record
+      ColorScheme: TMenuItem;
+      Brightness: TMenuItem;
+      AlphaBlend: TMenuItem;
+    end;
+  private const
+    DEF_BRIGHTNESS = 50;
+    COLORSCHEME_PARAMS: array [TColorScheme] of TColorSchemeParams =
+      ((Name: 'White/Black'; BgColor: clWhite; FontColor: clBlack),
+      (Name: 'Red/Black'; BgColor: clRed; FontColor: clBlack),
+      (Name: 'Green/Black'; BgColor: clGreen; FontColor: clBlack),
+      (Name: 'Blue/Black'; BgColor: clBlue; FontColor: clBlack),
+      (Name: 'Black/White'; BgColor: clBlack; FontColor: clWhite),
+      (Name: 'Red/White'; BgColor: clRed; FontColor: clWhite),
+      (Name: 'Green/White'; BgColor: clGreen; FontColor: clWhite),
+      (Name: 'Blue/White'; BgColor: clBlue; FontColor: clWhite));
   private
     FParentControl: TParentControl;
     FUsed: Boolean;
-    FAlphaBlend: Byte;
     FText: string;
     FMargin: Integer;
     FWidthRelative: Integer;
     FHeightRelative: Integer;
     FTimer: TTimer;
     FParentPos: TPoint;
+    FMenu: TPopupMenu;
+    FMenuItems: TMenuItems;
+    FColorScheme: TColorScheme;
+    FAlphaBlend: Byte;
+    FBrightness: Integer;
   private
     class var FParentWndHook: HHOOK;
     class var FObjects: TThreadList<TAlphaWindow>;
@@ -41,18 +71,29 @@ type
     // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
   private
     procedure UpdateVisible;
+    procedure UpdatePopupItems;
     procedure SetUsed(const Value: Boolean);
+    procedure SetColors;
     procedure ShowText;
     procedure OnTimer(Sender: TObject);
     procedure SetText(const Value: string);
     procedure SetMargin(const Value: Integer);
     procedure SetHeightRelative(const Value: Integer);
     procedure SetWidthRelative(const Value: Integer);
+    procedure SetColorScheme(const Value: TColorScheme);
+    procedure SetBrightness(const Value: Integer);
     procedure SetAlphaBlend(const Value: Byte);
+    procedure CreatePopupMenu;
+    procedure OnPopup(Sender: TObject);
+    procedure PopupSetColorScheme(Sender: TObject);
+    procedure PopupSetBrigtness(Sender: TObject);
+    procedure PopupSetAlphaBlend(Sender: TObject);
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
     procedure CreateWindowHandle(const Params: TCreateParams); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
   public
     class constructor Create;
     class destructor Destroy;
@@ -68,11 +109,33 @@ type
       write SetHeightRelative;
     property Used: Boolean read FUsed write SetUsed;
     property AlphaBlend: Byte read FAlphaBlend write SetAlphaBlend;
+    property ColorScheme: TColorScheme read FColorScheme write SetColorScheme;
+    property Brightness: Integer read FBrightness write SetBrightness;
     property Color;
     property Canvas;
   end;
 
 implementation
+
+function AdjustColor(AColor: TColor; APercent: ShortInt): TColor;
+
+  function AdjustValue(AValue: Byte): Byte;
+  begin
+    if APercent > 0 then
+      Result := AValue + MulDiv(255 - AValue, APercent, 100)
+    else
+      Result := AValue - MulDiv(AValue, -APercent, 100);
+  end;
+
+var
+  r, g, b: Byte;
+begin
+  AColor := ColorToRGB(AColor);
+  r := AdjustValue(GetRValue(AColor));
+  g := AdjustValue(GetGValue(AColor));
+  b := AdjustValue(GetBValue(AColor));
+  Result := RGB(r, g, b);
+end;
 
 { TAlphaWindow }
 
@@ -141,11 +204,11 @@ begin
   FTimer.OnTimer := OnTimer;
 
   FAlphaBlend := AAlphaBlend;
-  Canvas.Brush.Color := clWhite;
-  Canvas.Brush.style := bsClear;
+  FBrightness := DEF_BRIGHTNESS;
+  Canvas.Brush.Style := bsClear;
   Font := FParentControl.Font;
   Canvas.Font := Font;
-  Canvas.Font.Color := clBlack;
+  SetColors;
 
   FMargin := 5;
   FWidthRelative := 50;
@@ -153,6 +216,7 @@ begin
   Color := clWhite;
 
   RegisterObj;
+  CreatePopupMenu;
 end;
 
 class constructor TAlphaWindow.Create;
@@ -165,8 +229,59 @@ end;
 procedure TAlphaWindow.CreateParams(var Params: TCreateParams);
 begin
   inherited;
-  Params.style := WS_POPUP or WS_VISIBLE;
+  Params.Style := WS_POPUP or WS_VISIBLE;
   Params.ExStyle := WS_EX_LAYERED or WS_EX_TOOLWINDOW;
+end;
+
+procedure TAlphaWindow.CreatePopupMenu;
+var
+  LSubItem: TMenuItem;
+  LScheme: TColorScheme;
+  I, LValue: Integer;
+begin
+  FMenu := TPopupMenu.Create(Self);
+  FMenu.AutoHotkeys := maManual;
+  FMenu.OnPopup := OnPopup;
+
+  FMenuItems.ColorScheme := TMenuItem.Create(FMenu);
+  FMenuItems.ColorScheme.Caption := 'Color scheme';
+  FMenu.Items.Add(FMenuItems.ColorScheme);
+  for LScheme := Low(TColorScheme) to High(TColorScheme) do
+  begin
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := COLORSCHEME_PARAMS[LScheme].Name;
+    LSubItem.Tag := Ord(LScheme);
+    LSubItem.OnClick := PopupSetColorScheme;
+    FMenuItems.ColorScheme.Add(LSubItem);
+  end;
+
+  FMenuItems.Brightness := TMenuItem.Create(FMenu);
+  FMenuItems.Brightness.Caption := 'Brightness';
+  FMenu.Items.Add(FMenuItems.Brightness);
+  for I := -4 to 4 do
+  begin
+    LValue := I * 25;
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := IntToStr(LValue) + '%';
+    LSubItem.Tag := LValue;
+    LSubItem.OnClick := PopupSetBrigtness;
+    FMenuItems.Brightness.Add(LSubItem);
+  end;
+
+  FMenuItems.AlphaBlend := TMenuItem.Create(FMenu);
+  FMenuItems.AlphaBlend.Caption := 'Transparency';
+  FMenu.Items.Add(FMenuItems.AlphaBlend);
+  for I := 1 to 4 do
+  begin
+    LValue := I * 64 - 1;
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := IntToStr(Round(LValue / (256 / 100))) + '%';
+    LSubItem.Tag := LValue;
+    LSubItem.OnClick := PopupSetAlphaBlend;
+    FMenuItems.AlphaBlend.Add(LSubItem);
+  end;
+
+  PopupMenu := FMenu;
 end;
 
 procedure TAlphaWindow.CreateWindowHandle(const Params: TCreateParams);
@@ -178,6 +293,7 @@ end;
 destructor TAlphaWindow.Destroy;
 begin
   FreeAndNil(FTimer);
+  FreeAndNil(FMenu);
   UnRegisterObj;
   inherited;
 end;
@@ -192,6 +308,18 @@ class procedure TAlphaWindow.InstallHookParent;
 begin
   FParentWndHook := SetWindowsHookEx(WH_CALLWNDPROCRET, @CallWndRetProc, 0,
     GetCurrentThreadID);
+end;
+
+procedure TAlphaWindow.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited;
+  // MessageBox(Self.Handle, 'MouseDown', 'Test', MB_OK);
+end;
+
+procedure TAlphaWindow.OnPopup(Sender: TObject);
+begin
+  UpdatePopupItems;
 end;
 
 procedure TAlphaWindow.OnTimer(Sender: TObject);
@@ -221,6 +349,21 @@ begin
   ShowText;
 end;
 
+procedure TAlphaWindow.PopupSetAlphaBlend(Sender: TObject);
+begin
+  AlphaBlend := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.PopupSetBrigtness(Sender: TObject);
+begin
+  Brightness := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.PopupSetColorScheme(Sender: TObject);
+begin
+  ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
+end;
+
 procedure TAlphaWindow.RegisterObj;
 begin
   FObjects.Add(Self);
@@ -239,6 +382,27 @@ procedure TAlphaWindow.SetAlphaBlend(const Value: Byte);
 begin
   FAlphaBlend := Value;
   Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
+end;
+
+procedure TAlphaWindow.SetBrightness(const Value: Integer);
+begin
+  FBrightness := Value;
+  SetColors;
+  Invalidate;
+end;
+
+procedure TAlphaWindow.SetColors;
+begin
+  Color := AdjustColor(COLORSCHEME_PARAMS[FColorScheme].BgColor, FBrightness);
+  Canvas.Font.Color := COLORSCHEME_PARAMS[FColorScheme].FontColor;
+  Canvas.Brush.Color := Color;
+end;
+
+procedure TAlphaWindow.SetColorScheme(const Value: TColorScheme);
+begin
+  FColorScheme := Value;
+  SetColors;
+  Invalidate;
 end;
 
 procedure TAlphaWindow.SetHeightRelative(const Value: Integer);
@@ -298,6 +462,21 @@ end;
 procedure TAlphaWindow.UnRegisterObj;
 begin
   FObjects.Remove(Self);
+end;
+
+procedure TAlphaWindow.UpdatePopupItems;
+var
+  I: Integer;
+begin
+  for I := 0 to FMenuItems.ColorScheme.Count - 1 do
+    FMenuItems.ColorScheme.Items[I].Checked := Ord(FColorScheme)
+      = FMenuItems.ColorScheme.Items[I].Tag;
+  for I := 0 to FMenuItems.Brightness.Count - 1 do
+    FMenuItems.Brightness.Items[I].Checked :=
+      FBrightness = FMenuItems.Brightness.Items[I].Tag;
+  for I := 0 to FMenuItems.AlphaBlend.Count - 1 do
+    FMenuItems.AlphaBlend.Items[I].Checked :=
+      FAlphaBlend = FMenuItems.AlphaBlend.Items[I].Tag;
 end;
 
 procedure TAlphaWindow.UpdateVisible;
