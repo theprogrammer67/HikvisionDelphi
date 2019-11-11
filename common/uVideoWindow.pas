@@ -362,6 +362,8 @@ begin
   // FEvenFrame := False;
   if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
     RaiseLastHVError;
+
+  FTextPanel.Enabled := True;
 end;
 
 procedure TVideoWindow.PopupPlayStop(Sender: TObject);
@@ -468,6 +470,7 @@ end;
 
 procedure TVideoWindow.StopLiveVideo;
 begin
+  FTextPanel.Enabled := False;
   ClearError;
   if FRealHandle >= 0 then
     NET_DVR_StopRealPlay(FRealHandle);

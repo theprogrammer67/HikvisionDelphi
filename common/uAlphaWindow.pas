@@ -30,6 +30,10 @@ type
       TransparentBackground: TMenuItem;
     end;
   private const
+    TIMER_INTERVAL  = 150;
+    DEF_MARGIN = 5;
+    DEF_WIDTHRELATIVE = 50;
+    DEF_HEIGHTRELATIVE = 50;
     TRANSPARENT_COLOR = clTeal;
     DEF_BRIGHTNESS = -50;
     DEF_ALPHABLEND = 127;
@@ -120,8 +124,8 @@ type
     property Brightness: Integer read FBrightness write SetBrightness;
     property TransparentBackground: Boolean read FTransparentBackground
       write SetTransparentBackground;
-//    property Color;
-//    property Canvas;
+    // property Color;
+    // property Canvas;
   end;
 
 implementation
@@ -205,11 +209,13 @@ constructor TAlphaWindow.Create(AParent: TCustomControl);
 begin
   inherited CreateParented(AParent.Handle);
 
+  Enabled := False; // Отображаем только при воспроизведении
+
   FParentControl := TParentControl(AParent);
   FParentPos := Point(AParent.Left, AParent.Top);
 
   FTimer := TTimer.Create(nil);
-  FTimer.Interval := 150;
+  FTimer.Interval := TIMER_INTERVAL;
   FTimer.OnTimer := OnTimer;
 
   Canvas.Brush.Style := bsClear;
@@ -219,10 +225,9 @@ begin
   Brightness := DEF_BRIGHTNESS;
   ColorScheme := DEF_COLORSCHEME;
   TransparentBackground := False;
-
-  FMargin := 5;
-  FWidthRelative := 50;
-  FHeightRelative := 50;
+  FMargin := DEF_MARGIN;
+  FWidthRelative := DEF_WIDTHRELATIVE;
+  FHeightRelative := DEF_HEIGHTRELATIVE;
 
   RegisterObj;
   CreatePopupMenu;
@@ -519,7 +524,7 @@ end;
 
 procedure TAlphaWindow.UpdateVisible;
 begin
-  Visible := FParentControl.Visible and Used;
+  Visible := FParentControl.Visible and Used and Enabled;
 end;
 
 procedure TAlphaWindow.WMMove(var Message: TWMMove);
