@@ -12,7 +12,7 @@ const
   WM_CHANGESELECTED = WM_USER + 2;
 
 type
-  TTextRectPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
+  TTextPanelPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
 
   TVideoWindow = class;
 
@@ -26,7 +26,7 @@ type
     FParent: TVideoWindow;
     FWidth: Integer;
     FHeight: Integer;
-    FPosition: TTextRectPosition;
+    FPosition: TTextPanelPosition;
     FText: string;
     FBackgroundAlfaBlend: Byte;
     FRectangle: TRect;
@@ -34,14 +34,14 @@ type
   private
     procedure Resize(ARefresh: Boolean = True);
     procedure SetHeight(const Value: Integer);
-    procedure SetPosition(const Value: TTextRectPosition);
+    procedure SetPosition(const Value: TTextPanelPosition);
     procedure SetWidth(const Value: Integer);
   public
     constructor Create(AParent: TVideoWindow);
     destructor Destroy; override;
     procedure DrawText(hDc: IntPtr);
   public
-    property Position: TTextRectPosition read FPosition write SetPosition;
+    property Position: TTextPanelPosition read FPosition write SetPosition;
     property Width: Integer read FWidth write SetWidth;
     property Height: Integer read FHeight write SetHeight;
     property Text: string read FText write FText;
@@ -654,7 +654,7 @@ begin
   Resize;
 end;
 
-procedure TTextRectangle.SetPosition(const Value: TTextRectPosition);
+procedure TTextRectangle.SetPosition(const Value: TTextPanelPosition);
 begin
   FPosition := Value;
   Resize;

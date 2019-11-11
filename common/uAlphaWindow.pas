@@ -7,6 +7,8 @@ uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
   Vcl.ExtCtrls, Vcl.Menus;
 
 type
+  TWindowPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
+
   TParentControl = class(TCustomControl)
   public
     property Font;
@@ -30,7 +32,7 @@ type
       TransparentBackground: TMenuItem;
     end;
   private const
-    TIMER_INTERVAL  = 150;
+    TIMER_INTERVAL = 150;
     DEF_MARGIN = 5;
     DEF_WIDTHRELATIVE = 50;
     DEF_HEIGHTRELATIVE = 50;
@@ -62,6 +64,7 @@ type
     FAlphaBlend: Byte;
     FBrightness: Integer;
     FTransparentBackground: Boolean;
+    FPosition: TWindowPosition;
   private
     class var FParentWndHook: HHOOK;
     class var FObjects: TThreadList<TAlphaWindow>;
@@ -77,7 +80,8 @@ type
     procedure CMVisibleChanged(var Message: TMessage);
       message CM_VISIBLECHANGED;
     // procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
-    // procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
+    procedure WMWindowPosChanged(var Message: TWMWindowPosChanged);
+      message WM_WINDOWPOSCHANGED;
   private
     procedure UpdateVisible;
     procedure UpdatePopupItems;
@@ -99,6 +103,7 @@ type
     procedure PopupSetAlphaBlend(Sender: TObject);
     procedure PopupSetTransparentBackground(Sender: TObject);
     procedure SetTransparentBackground(const Value: Boolean);
+    procedure SetPosition(const Value: TWindowPosition);
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -112,6 +117,7 @@ type
     destructor Destroy; override;
   public
     procedure CalculateSize;
+    procedure CalculatePosition;
   public
     property Text: string read FText write SetText;
     property Margin: Integer read FMargin write SetMargin;
@@ -124,8 +130,7 @@ type
     property Brightness: Integer read FBrightness write SetBrightness;
     property TransparentBackground: Boolean read FTransparentBackground
       write SetTransparentBackground;
-    // property Color;
-    // property Canvas;
+    property Position: TWindowPosition read FPosition write SetPosition;
   end;
 
 implementation
@@ -358,12 +363,7 @@ begin
 end;
 
 procedure TAlphaWindow.Paint;
-var
-  LLeftTop: TPoint;
 begin
-  LLeftTop := FParentControl.ClientToScreen(Point(0, 0));
-  Left := LLeftTop.X + Margin;
-  Top := LLeftTop.Y + Margin;
   inherited;
   ShowText;
 end;
@@ -391,6 +391,27 @@ end;
 procedure TAlphaWindow.RegisterObj;
 begin
   FObjects.Add(Self);
+end;
+
+procedure TAlphaWindow.CalculatePosition;
+var
+  LLeftTop: TPoint;
+  LLeft, LTop: Integer;
+begin
+  LLeftTop := FParentControl.ClientToScreen(Point(0, 0));
+  LLeft := LLeftTop.X + Margin;
+  LTop := LLeftTop.Y + Margin;
+
+  if FPosition in [tpTopRight, tpBottomRight] then
+    LLeft := FParentControl.Width - Width - Margin;
+  LLeft := Max(Margin, LLeft);
+
+  if FPosition in [tpBottomLeft, tpBottomRight] then
+    LTop := FParentControl.Height - Height - Margin;
+  LTop := Max(Margin, LTop);
+
+  Left := LLeft;
+  Top := LTop;
 end;
 
 procedure TAlphaWindow.CalculateSize;
@@ -447,6 +468,12 @@ begin
   FMargin := Value;
   if Visible then
     Invalidate;
+end;
+
+procedure TAlphaWindow.SetPosition(const Value: TWindowPosition);
+begin
+  FPosition := Value;
+  CalculatePosition;
 end;
 
 procedure TAlphaWindow.SetText(const Value: string);
@@ -530,14 +557,15 @@ end;
 procedure TAlphaWindow.WMMove(var Message: TWMMove);
 begin
   inherited;
+  CalculatePosition;
   Invalidate;
 end;
 
-
-// procedure TAlphaWindow.WMWindowPosChanged(var Message: TWMWindowPosChanged);
-// begin
-// inherited;
-// Invalidate;
-// end;
+procedure TAlphaWindow.WMWindowPosChanged(var Message: TWMWindowPosChanged);
+begin
+  inherited;
+  CalculatePosition;
+  Invalidate;
+end;
 
 end.
