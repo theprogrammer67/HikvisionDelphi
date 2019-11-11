@@ -81,7 +81,7 @@ object frmMainForm: TfrmMainForm
     Top = 0
     Width = 714
     Height = 397
-    ActivePage = tsVideo
+    ActivePage = tsSettings
     Align = alClient
     TabOrder = 1
     object tsVideo: TTabSheet

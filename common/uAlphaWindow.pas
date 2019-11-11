@@ -27,9 +27,13 @@ type
       ColorScheme: TMenuItem;
       Brightness: TMenuItem;
       AlphaBlend: TMenuItem;
+      TransparentBackground: TMenuItem;
     end;
   private const
-    DEF_BRIGHTNESS = 50;
+    TRANSPARENT_COLOR = clTeal;
+    DEF_BRIGHTNESS = -50;
+    DEF_ALPHABLEND = 127;
+    DEF_COLORSCHEME = csGreenWhite;
     COLORSCHEME_PARAMS: array [TColorScheme] of TColorSchemeParams =
       ((Name: 'White/Black'; BgColor: clWhite; FontColor: clBlack),
       (Name: 'Red/Black'; BgColor: clRed; FontColor: clBlack),
@@ -53,6 +57,7 @@ type
     FColorScheme: TColorScheme;
     FAlphaBlend: Byte;
     FBrightness: Integer;
+    FTransparentBackground: Boolean;
   private
     class var FParentWndHook: HHOOK;
     class var FObjects: TThreadList<TAlphaWindow>;
@@ -88,6 +93,8 @@ type
     procedure PopupSetColorScheme(Sender: TObject);
     procedure PopupSetBrigtness(Sender: TObject);
     procedure PopupSetAlphaBlend(Sender: TObject);
+    procedure PopupSetTransparentBackground(Sender: TObject);
+    procedure SetTransparentBackground(const Value: Boolean);
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -97,7 +104,7 @@ type
   public
     class constructor Create;
     class destructor Destroy;
-    constructor Create(AParent: TCustomControl; AAlphaBlend: Byte); reintroduce;
+    constructor Create(AParent: TCustomControl); reintroduce;
     destructor Destroy; override;
   public
     procedure CalculateSize;
@@ -111,8 +118,10 @@ type
     property AlphaBlend: Byte read FAlphaBlend write SetAlphaBlend;
     property ColorScheme: TColorScheme read FColorScheme write SetColorScheme;
     property Brightness: Integer read FBrightness write SetBrightness;
-    property Color;
-    property Canvas;
+    property TransparentBackground: Boolean read FTransparentBackground
+      write SetTransparentBackground;
+//    property Color;
+//    property Canvas;
   end;
 
 implementation
@@ -192,7 +201,7 @@ begin
     Winapi.Windows.ShowWindow(Handle, SW_HIDE);
 end;
 
-constructor TAlphaWindow.Create(AParent: TCustomControl; AAlphaBlend: Byte);
+constructor TAlphaWindow.Create(AParent: TCustomControl);
 begin
   inherited CreateParented(AParent.Handle);
 
@@ -203,17 +212,17 @@ begin
   FTimer.Interval := 150;
   FTimer.OnTimer := OnTimer;
 
-  FAlphaBlend := AAlphaBlend;
-  FBrightness := DEF_BRIGHTNESS;
   Canvas.Brush.Style := bsClear;
   Font := FParentControl.Font;
   Canvas.Font := Font;
-  SetColors;
+  AlphaBlend := DEF_ALPHABLEND;
+  Brightness := DEF_BRIGHTNESS;
+  ColorScheme := DEF_COLORSCHEME;
+  TransparentBackground := False;
 
   FMargin := 5;
   FWidthRelative := 50;
   FHeightRelative := 50;
-  Color := clWhite;
 
   RegisterObj;
   CreatePopupMenu;
@@ -280,6 +289,11 @@ begin
     LSubItem.OnClick := PopupSetAlphaBlend;
     FMenuItems.AlphaBlend.Add(LSubItem);
   end;
+
+  FMenuItems.TransparentBackground := TMenuItem.Create(FMenu);
+  FMenuItems.TransparentBackground.Caption := 'Transparent background';
+  FMenuItems.TransparentBackground.OnClick := PopupSetTransparentBackground;
+  FMenu.Items.Add(FMenuItems.TransparentBackground);
 
   PopupMenu := FMenu;
 end;
@@ -364,6 +378,11 @@ begin
   ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
 end;
 
+procedure TAlphaWindow.PopupSetTransparentBackground(Sender: TObject);
+begin
+  TransparentBackground := not TransparentBackground;
+end;
+
 procedure TAlphaWindow.RegisterObj;
 begin
   FObjects.Add(Self);
@@ -381,7 +400,9 @@ end;
 procedure TAlphaWindow.SetAlphaBlend(const Value: Byte);
 begin
   FAlphaBlend := Value;
-  Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
+  if not TransparentBackground then
+    Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend,
+      LWA_ALPHA);
 end;
 
 procedure TAlphaWindow.SetBrightness(const Value: Integer);
@@ -393,9 +414,13 @@ end;
 
 procedure TAlphaWindow.SetColors;
 begin
-  Color := AdjustColor(COLORSCHEME_PARAMS[FColorScheme].BgColor, FBrightness);
-  Canvas.Font.Color := COLORSCHEME_PARAMS[FColorScheme].FontColor;
+  if TransparentBackground then
+    Color := TRANSPARENT_COLOR
+  else
+    Color := AdjustColor(COLORSCHEME_PARAMS[FColorScheme].BgColor, FBrightness);
+
   Canvas.Brush.Color := Color;
+  Canvas.Font.Color := COLORSCHEME_PARAMS[FColorScheme].FontColor;
 end;
 
 procedure TAlphaWindow.SetColorScheme(const Value: TColorScheme);
@@ -424,6 +449,18 @@ begin
   FText := Value;
   if Visible then
     Invalidate;
+end;
+
+procedure TAlphaWindow.SetTransparentBackground(const Value: Boolean);
+begin
+  FTransparentBackground := Value;
+  if FTransparentBackground then
+    SetLayeredWindowAttributes(Handle, ColorToRGB(TRANSPARENT_COLOR), 0,
+      LWA_COLORKEY)
+  else
+    SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
+
+  SetColors;
 end;
 
 procedure TAlphaWindow.SetUsed(const Value: Boolean);
@@ -477,6 +514,7 @@ begin
   for I := 0 to FMenuItems.AlphaBlend.Count - 1 do
     FMenuItems.AlphaBlend.Items[I].Checked :=
       FAlphaBlend = FMenuItems.AlphaBlend.Items[I].Tag;
+  FMenuItems.TransparentBackground.Checked := TransparentBackground;
 end;
 
 procedure TAlphaWindow.UpdateVisible;

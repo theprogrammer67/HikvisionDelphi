@@ -6,7 +6,8 @@ uses
   uCHCNetSDK in '..\..\common\uCHCNetSDK.pas',
   uVideoWindow in '..\..\common\uVideoWindow.pas',
   uVideoPanel in '..\..\common\uVideoPanel.pas',
-  uHikvisionErrors in '..\..\common\uHikvisionErrors.pas';
+  uHikvisionErrors in '..\..\common\uHikvisionErrors.pas',
+  uAlphaWindow in '..\..\common\uAlphaWindow.pas';
 
 {$R *.res}
 

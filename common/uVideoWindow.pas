@@ -80,7 +80,6 @@ type
     ERROR_FONTSIZE = 10;
     STATUS_FONTNAME = 'Impact';
     STATUS_FONTSIZE = 24;
-    DEF_ALPHABLEND = 191;
   private
     FId: Cardinal;
     FUsed: Boolean;
@@ -225,7 +224,7 @@ end;
 procedure TVideoWindow.CreateTextPanel;
 begin
   FreeAndNil(FTextPanel);
-  FTextPanel := TAlphaWindow.Create(Self, DEF_ALPHABLEND);
+  FTextPanel := TAlphaWindow.Create(Self);
 end;
 
 class constructor TVideoWindow.Create;

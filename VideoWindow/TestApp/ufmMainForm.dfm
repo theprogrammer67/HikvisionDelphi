@@ -3231,7 +3231,6 @@ object frmMainForm: TfrmMainForm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitHeight = 226
   end
   object pnlBottm: TPanel
     Left = 0
@@ -3319,7 +3318,7 @@ object frmMainForm: TfrmMainForm
       EditLabel.Caption = 'Channel'
       NumbersOnly = True
       TabOrder = 5
-      Text = '2'
+      Text = '3'
     end
     object btnSetOverlayText: TButton
       Left = 24
