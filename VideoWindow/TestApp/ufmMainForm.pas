@@ -29,6 +29,9 @@ type
     trckbrAlphaBlend: TTrackBar;
     lblBrightness: TLabel;
     lblAlphaBlend: TLabel;
+    pgcPages: TPageControl;
+    ts1: TTabSheet;
+    ts2: TTabSheet;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
     procedure btnCreateViideoWindowClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);

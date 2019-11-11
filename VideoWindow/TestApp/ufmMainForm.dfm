@@ -3,7 +3,7 @@ object frmMainForm: TfrmMainForm
   Top = 0
   Caption = 'Video window test'
   ClientHeight = 667
-  ClientWidth = 430
+  ClientWidth = 425
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -3217,29 +3217,15 @@ object frmMainForm: TfrmMainForm
   OnDestroy = FormDestroy
   PixelsPerInch = 120
   TextHeight = 16
-  object pnlVideo: TPanel
-    Left = 0
-    Top = 0
-    Width = 430
-    Height = 256
-    Align = alClient
-    Caption = 'pnlVideo'
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clBlack
-    Font.Height = -20
-    Font.Name = 'Courier New'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 0
-  end
   object pnlBottm: TPanel
     Left = 0
     Top = 256
-    Width = 430
+    Width = 425
     Height = 411
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 1
+    TabOrder = 0
+    ExplicitWidth = 430
     object lblBrightness: TLabel
       Left = 32
       Top = 292
@@ -3408,6 +3394,45 @@ object frmMainForm: TfrmMainForm
       TabOrder = 13
       TickStyle = tsNone
       OnChange = trckbrAlphaBlendChange
+    end
+  end
+  object pgcPages: TPageControl
+    Left = 0
+    Top = 0
+    Width = 425
+    Height = 256
+    ActivePage = ts1
+    Align = alClient
+    TabOrder = 1
+    ExplicitLeft = 136
+    ExplicitTop = 8
+    ExplicitWidth = 289
+    ExplicitHeight = 193
+    object ts1: TTabSheet
+      Caption = 'ts1'
+      ExplicitWidth = 281
+      ExplicitHeight = 162
+      object pnlVideo: TPanel
+        Left = 0
+        Top = 0
+        Width = 417
+        Height = 225
+        Align = alClient
+        Caption = 'pnlVideo'
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clBlack
+        Font.Height = -20
+        Font.Name = 'Courier New'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        ExplicitWidth = 425
+        ExplicitHeight = 256
+      end
+    end
+    object ts2: TTabSheet
+      Caption = 'ts2'
+      ImageIndex = 1
     end
   end
   object appev1: TApplicationEvents

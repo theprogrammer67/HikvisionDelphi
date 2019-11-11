@@ -576,7 +576,7 @@ end;
 
 procedure TAlphaWindow.UpdateVisible;
 begin
-  Visible := FParentControl.Visible and Used and Enabled;
+  Visible := IsWindowVisible(FParentControl.Handle) and Used and Enabled;
 end;
 
 procedure TAlphaWindow.WMMove(var Message: TWMMove);
