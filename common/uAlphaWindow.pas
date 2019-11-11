@@ -9,6 +9,12 @@ uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
 type
   TWindowPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
 
+const
+  WPOSITION_NAMES: array [TWindowPosition] of string = ('Top-Left', 'Top-Right',
+    'Bottom-Right', 'Bottom-Left');
+
+type
+
   TParentControl = class(TCustomControl)
   public
     property Font;
@@ -30,6 +36,7 @@ type
       Brightness: TMenuItem;
       AlphaBlend: TMenuItem;
       TransparentBackground: TMenuItem;
+      Position: TMenuItem;
     end;
   private const
     TIMER_INTERVAL = 150;
@@ -84,7 +91,6 @@ type
       message WM_WINDOWPOSCHANGED;
   private
     procedure UpdateVisible;
-    procedure UpdatePopupItems;
     procedure SetUsed(const Value: Boolean);
     procedure SetColors;
     procedure ShowText;
@@ -97,11 +103,13 @@ type
     procedure SetBrightness(const Value: Integer);
     procedure SetAlphaBlend(const Value: Byte);
     procedure CreatePopupMenu;
+    procedure UpdatePopupItems;
     procedure OnPopup(Sender: TObject);
     procedure PopupSetColorScheme(Sender: TObject);
     procedure PopupSetBrigtness(Sender: TObject);
     procedure PopupSetAlphaBlend(Sender: TObject);
     procedure PopupSetTransparentBackground(Sender: TObject);
+    procedure PopupSetSetPosition(Sender: TObject);
     procedure SetTransparentBackground(const Value: Boolean);
     procedure SetPosition(const Value: TWindowPosition);
   protected
@@ -257,6 +265,7 @@ var
   LSubItem: TMenuItem;
   LScheme: TColorScheme;
   I, LValue: Integer;
+  LPosition: TWindowPosition;
 begin
   FMenu := TPopupMenu.Create(Self);
   FMenu.AutoHotkeys := maManual;
@@ -304,6 +313,18 @@ begin
   FMenuItems.TransparentBackground.Caption := 'Transparent background';
   FMenuItems.TransparentBackground.OnClick := PopupSetTransparentBackground;
   FMenu.Items.Add(FMenuItems.TransparentBackground);
+
+  FMenuItems.Position := TMenuItem.Create(FMenu);
+  FMenuItems.Position.Caption := 'Position';
+  FMenu.Items.Add(FMenuItems.Position);
+  for LPosition := Low(TWindowPosition) to High(TWindowPosition) do
+  begin
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := WPOSITION_NAMES[LPosition];
+    LSubItem.Tag := Ord(LPosition);
+    LSubItem.OnClick := PopupSetSetPosition;
+    FMenuItems.Position.Add(LSubItem);
+  end;
 
   PopupMenu := FMenu;
 end;
@@ -383,6 +404,11 @@ begin
   ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
 end;
 
+procedure TAlphaWindow.PopupSetSetPosition(Sender: TObject);
+begin
+  Position := TWindowPosition(TMenuItem(Sender).Tag);
+end;
+
 procedure TAlphaWindow.PopupSetTransparentBackground(Sender: TObject);
 begin
   TransparentBackground := not TransparentBackground;
@@ -396,22 +422,18 @@ end;
 procedure TAlphaWindow.CalculatePosition;
 var
   LLeftTop: TPoint;
-  LLeft, LTop: Integer;
 begin
   LLeftTop := FParentControl.ClientToScreen(Point(0, 0));
-  LLeft := LLeftTop.X + Margin;
-  LTop := LLeftTop.Y + Margin;
 
   if FPosition in [tpTopRight, tpBottomRight] then
-    LLeft := FParentControl.Width - Width - Margin;
-  LLeft := Max(Margin, LLeft);
+    Left := LLeftTop.X + (FParentControl.Width - Width - Margin)
+  else
+    Left := LLeftTop.X + Margin;
 
   if FPosition in [tpBottomLeft, tpBottomRight] then
-    LTop := FParentControl.Height - Height - Margin;
-  LTop := Max(Margin, LTop);
-
-  Left := LLeft;
-  Top := LTop;
+    Top := LLeftTop.Y + (FParentControl.Height - Height - Margin)
+  else
+    Top := LLeftTop.Y + Margin;
 end;
 
 procedure TAlphaWindow.CalculateSize;
@@ -547,6 +569,9 @@ begin
     FMenuItems.AlphaBlend.Items[I].Checked :=
       FAlphaBlend = FMenuItems.AlphaBlend.Items[I].Tag;
   FMenuItems.TransparentBackground.Checked := TransparentBackground;
+  for I := 0 to FMenuItems.Position.Count - 1 do
+    FMenuItems.Position.Items[I].Checked := Ord(FPosition)
+      = FMenuItems.Position.Items[I].Tag;
 end;
 
 procedure TAlphaWindow.UpdateVisible;
