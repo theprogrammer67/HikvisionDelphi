@@ -43,7 +43,7 @@ type
       ColorScheme: TMenuItem;
       Brightness: TMenuItem;
       Transparency: TMenuItem;
-      TransparentBackground: TMenuItem;
+      TransparentBg: TMenuItem;
       Position: TMenuItem;
       Width: TMenuItem;
       Height: TMenuItem;
@@ -82,7 +82,7 @@ type
     FColorScheme: TColorScheme;
     FTransparency: Byte;
     FBrightness: Integer;
-    FTransparentBackground: Boolean;
+    FTransparentBg: Boolean;
     FPosition: TWindowPosition;
   private
     class var FParentWndHook: HHOOK;
@@ -150,7 +150,7 @@ type
     property Transparecy: Byte read FTransparency write SetTransparency;
     property ColorScheme: TColorScheme read FColorScheme write SetColorScheme;
     property Brightness: Integer read FBrightness write SetBrightness;
-    property TransparentBackground: Boolean read FTransparentBackground
+    property TransparentBg: Boolean read FTransparentBg
       write SetTransparentBackground;
     property Position: TWindowPosition read FPosition write SetPosition;
   end;
@@ -252,7 +252,7 @@ begin
   Transparecy := DefTransparency;
   Brightness := DefBrightness;
   ColorScheme := DefColorScheme;
-  TransparentBackground := DefTransparentBg;
+  TransparentBg := DefTransparentBg;
   FMargin := DefMargin;
   FWidthRelative := DefWidthRelative;
   FHeightRelative := DefHeightRelative;
@@ -334,10 +334,10 @@ begin
     FMenuItems.Transparency.Add(LSubItem);
   end;
 
-  FMenuItems.TransparentBackground := TMenuItem.Create(FMenu);
-  FMenuItems.TransparentBackground.Caption := 'Transparent background';
-  FMenuItems.TransparentBackground.OnClick := PopupSetTransparentBackground;
-  FMenu.Items.Add(FMenuItems.TransparentBackground);
+  FMenuItems.TransparentBg := TMenuItem.Create(FMenu);
+  FMenuItems.TransparentBg.Caption := 'Transparent background';
+  FMenuItems.TransparentBg.OnClick := PopupSetTransparentBackground;
+  FMenu.Items.Add(FMenuItems.TransparentBg);
 
   FMenuItems.Position := TMenuItem.Create(FMenu);
   FMenuItems.Position.Caption := 'Position';
@@ -484,7 +484,7 @@ end;
 
 procedure TAlphaWindow.PopupSetTransparentBackground(Sender: TObject);
 begin
-  TransparentBackground := not TransparentBackground;
+  TransparentBg := not TransparentBg;
 end;
 
 procedure TAlphaWindow.PopupSetWidth(Sender: TObject);
@@ -528,7 +528,7 @@ end;
 procedure TAlphaWindow.SetTransparency(const Value: Byte);
 begin
   FTransparency := Value;
-  if not TransparentBackground then
+  if not TransparentBg then
     Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, GetAlphaBlend,
       LWA_ALPHA);
 end;
@@ -541,7 +541,7 @@ end;
 
 procedure TAlphaWindow.SetColors;
 begin
-  if TransparentBackground then
+  if TransparentBg then
     Color := TRANSPARENT_COLOR
   else
     Color := AdjustColor(COLORSCHEME_PARAMS[FColorScheme].BgColor, FBrightness);
@@ -583,8 +583,8 @@ end;
 
 procedure TAlphaWindow.SetTransparentBackground(const Value: Boolean);
 begin
-  FTransparentBackground := Value;
-  if FTransparentBackground then
+  FTransparentBg := Value;
+  if FTransparentBg then
     SetLayeredWindowAttributes(Handle, ColorToRGB(TRANSPARENT_COLOR), 0,
       LWA_COLORKEY)
   else
@@ -618,7 +618,7 @@ begin
   LBrushColor := Canvas.Brush.Color;
   try
     InflateRect(LRect, Margin, Margin);
-    if TransparentBackground then
+    if TransparentBg then
       Canvas.Brush.Color := clSilver
     else
       Canvas.Brush.Color := AdjustColor(Color, 50);
@@ -653,7 +653,7 @@ begin
   for I := 0 to FMenuItems.Transparency.Count - 1 do
     FMenuItems.Transparency.Items[I].Checked :=
       FTransparency = FMenuItems.Transparency.Items[I].Tag;
-  FMenuItems.TransparentBackground.Checked := TransparentBackground;
+  FMenuItems.TransparentBg.Checked := TransparentBg;
   for I := 0 to FMenuItems.Position.Count - 1 do
     FMenuItems.Position.Items[I].Checked := Ord(FPosition)
       = FMenuItems.Position.Items[I].Tag;
