@@ -200,7 +200,7 @@ var
 begin
   LVideoWindow := FVideoPanel.VideoWindows[cbbWIndow.ItemIndex];
   lbledtChannel.Text := IntToStr(LVideoWindow.Channel);
-  chkPrintText.Checked := LVideoWindow.ShowOverlayText;
+  chkPrintText.Checked := LVideoWindow.TextPanel.Used;
   chkEnable.Checked := LVideoWindow.Enabled;
   chkVisible.Checked := LVideoWindow.Visible;
 end;
@@ -212,10 +212,10 @@ begin
   LVideoWindow := FVideoPanel.VideoWindows[cbbWIndow.ItemIndex];
 
   LVideoWindow.Channel := StrToInt(lbledtChannel.Text);
-  LVideoWindow.ShowOverlayText := chkPrintText.Checked;
+  LVideoWindow.TextPanel.Used := chkPrintText.Checked;
   LVideoWindow.Enabled := chkEnable.Checked;
   LVideoWindow.Visible := chkVisible.Checked;
-  LVideoWindow.OverlayText := mmoText.Text;
+  LVideoWindow.TextPanel.Text := mmoText.Text;
 end;
 
 end.

@@ -3225,7 +3225,6 @@ object frmMainForm: TfrmMainForm
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 430
     object lblBrightness: TLabel
       Left = 32
       Top = 292
@@ -3233,12 +3232,12 @@ object frmMainForm: TfrmMainForm
       Height = 16
       Caption = 'Brightness:'
     end
-    object lblAlphaBlend: TLabel
+    object lblTransparency: TLabel
       Left = 32
       Top = 328
-      Width = 68
+      Width = 83
       Height = 16
-      Caption = 'AlphaBlend:'
+      Caption = 'Transparency:'
     end
     object btnPlayStop: TButton
       Left = 336
@@ -3384,16 +3383,16 @@ object frmMainForm: TfrmMainForm
       TickStyle = tsNone
       OnChange = trckbrBrightnessChange
     end
-    object trckbrAlphaBlend: TTrackBar
+    object trckbrTransparency: TTrackBar
       Left = 128
       Top = 331
       Width = 279
       Height = 25
-      Max = 255
+      Max = 100
       ShowSelRange = False
       TabOrder = 13
       TickStyle = tsNone
-      OnChange = trckbrAlphaBlendChange
+      OnChange = trckbrTransparencyChange
     end
   end
   object pgcPages: TPageControl
@@ -3404,16 +3403,8 @@ object frmMainForm: TfrmMainForm
     ActivePage = ts1
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 136
-    ExplicitTop = 8
-    ExplicitWidth = 289
-    ExplicitHeight = 193
     object ts1: TTabSheet
       Caption = 'ts1'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 281
-      ExplicitHeight = 162
       object pnlVideo: TPanel
         Left = 0
         Top = 0
@@ -3428,17 +3419,11 @@ object frmMainForm: TfrmMainForm
         Font.Style = []
         ParentFont = False
         TabOrder = 0
-        ExplicitWidth = 425
-        ExplicitHeight = 256
       end
     end
     object ts2: TTabSheet
       Caption = 'ts2'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
   end
   object appev1: TApplicationEvents

@@ -86,6 +86,10 @@ object frmMainForm: TfrmMainForm
     TabOrder = 1
     object tsVideo: TTabSheet
       Caption = 'Video'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlVideo: TPanel
         Left = 0
         Top = 0
@@ -102,6 +106,10 @@ object frmMainForm: TfrmMainForm
       Caption = 'Settings'
       ImageIndex = 1
       OnShow = tsSettingsShow
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lbledtAddress: TLabeledEdit
         Left = 32
         Top = 32

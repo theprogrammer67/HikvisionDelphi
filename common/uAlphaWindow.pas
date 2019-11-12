@@ -4,7 +4,7 @@ interface
 
 uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
   System.Math, System.Generics.Collections, Winapi.Messages, System.SysUtils,
-  Vcl.ExtCtrls, Vcl.Menus;
+  Vcl.ExtCtrls, Vcl.Menus, System.UITypes;
 
 type
   TWindowPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
@@ -33,7 +33,7 @@ type
     TMenuItems = record
       ColorScheme: TMenuItem;
       Brightness: TMenuItem;
-      AlphaBlend: TMenuItem;
+      Transparency: TMenuItem;
       TransparentBackground: TMenuItem;
       Position: TMenuItem;
       Width: TMenuItem;
@@ -47,7 +47,7 @@ type
     DEF_HEIGHTRELATIVE = 50;
     TRANSPARENT_COLOR = clTeal;
     DEF_BRIGHTNESS = -50;
-    DEF_ALPHABLEND = 127;
+    DEF_TRANSPARENCY = 50;
     DEF_COLORSCHEME = csGreenWhite;
     COLORSCHEME_PARAMS: array [TColorScheme] of TColorSchemeParams =
       ((Name: 'White/Black'; BgColor: clWhite; FontColor: clBlack),
@@ -70,7 +70,7 @@ type
     FMenu: TPopupMenu;
     FMenuItems: TMenuItems;
     FColorScheme: TColorScheme;
-    FAlphaBlend: Byte;
+    FTransparency: Byte;
     FBrightness: Integer;
     FTransparentBackground: Boolean;
     FPosition: TWindowPosition;
@@ -96,13 +96,14 @@ type
     procedure OnPopup(Sender: TObject);
     procedure PopupSetColorScheme(Sender: TObject);
     procedure PopupSetBrigtness(Sender: TObject);
-    procedure PopupSetAlphaBlend(Sender: TObject);
+    procedure PopupSetTransparency(Sender: TObject);
     procedure PopupSetTransparentBackground(Sender: TObject);
     procedure PopupSetSetPosition(Sender: TObject);
     procedure PopupSetWidth(Sender: TObject);
     procedure PopupSetHeight(Sender: TObject);
     procedure PopupSetMargin(Sender: TObject);
   private
+    function GetAlphaBlend: Byte;
     procedure UpdateVisible;
     procedure SetUsed(const Value: Boolean);
     procedure SetColors;
@@ -114,7 +115,7 @@ type
     procedure SetWidthRelative(const Value: Integer);
     procedure SetColorScheme(const Value: TColorScheme);
     procedure SetBrightness(const Value: Integer);
-    procedure SetAlphaBlend(const Value: Byte);
+    procedure SetTransparency(const Value: Byte);
     procedure SetTransparentBackground(const Value: Boolean);
     procedure SetPosition(const Value: TWindowPosition);
   protected
@@ -136,7 +137,7 @@ type
     property HeightRelative: Integer read FHeightRelative
       write SetHeightRelative;
     property Used: Boolean read FUsed write SetUsed;
-    property AlphaBlend: Byte read FAlphaBlend write SetAlphaBlend;
+    property Transparecy: Byte read FTransparency write SetTransparency;
     property ColorScheme: TColorScheme read FColorScheme write SetColorScheme;
     property Brightness: Integer read FBrightness write SetBrightness;
     property TransparentBackground: Boolean read FTransparentBackground
@@ -237,7 +238,7 @@ begin
   Canvas.Brush.Style := bsClear;
   Font := FParentControl.Font;
   Canvas.Font := Font;
-  AlphaBlend := DEF_ALPHABLEND;
+  Transparecy := DEF_TRANSPARENCY;
   Brightness := DEF_BRIGHTNESS;
   ColorScheme := DEF_COLORSCHEME;
   TransparentBackground := False;
@@ -301,17 +302,17 @@ begin
     FMenuItems.Brightness.Add(LSubItem);
   end;
 
-  FMenuItems.AlphaBlend := TMenuItem.Create(FMenu);
-  FMenuItems.AlphaBlend.Caption := 'Transparency';
-  FMenu.Items.Add(FMenuItems.AlphaBlend);
-  for I := 1 to 4 do
+  FMenuItems.Transparency := TMenuItem.Create(FMenu);
+  FMenuItems.Transparency.Caption := 'Transparency';
+  FMenu.Items.Add(FMenuItems.Transparency);
+  for I := 0 to 3 do
   begin
-    LValue := I * 64 - 1;
+    LValue := I * 25;
     LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(100 - Round(LValue / (256 / 100))) + '%';
+    LSubItem.Caption := IntToStr(LValue) + '%';
     LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetAlphaBlend;
-    FMenuItems.AlphaBlend.Add(LSubItem);
+    LSubItem.OnClick := PopupSetTransparency;
+    FMenuItems.Transparency.Add(LSubItem);
   end;
 
   FMenuItems.TransparentBackground := TMenuItem.Create(FMenu);
@@ -376,7 +377,8 @@ end;
 procedure TAlphaWindow.CreateWindowHandle(const Params: TCreateParams);
 begin
   inherited;
-  Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
+  Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, GetAlphaBlend,
+    LWA_ALPHA);
 end;
 
 destructor TAlphaWindow.Destroy;
@@ -385,6 +387,11 @@ begin
   FreeAndNil(FMenu);
   UnRegisterObj;
   inherited;
+end;
+
+function TAlphaWindow.GetAlphaBlend: Byte;
+begin
+  Result := 255 - MulDiv(255, FTransparency, 100);
 end;
 
 class destructor TAlphaWindow.Destroy;
@@ -426,9 +433,9 @@ begin
   ShowText;
 end;
 
-procedure TAlphaWindow.PopupSetAlphaBlend(Sender: TObject);
+procedure TAlphaWindow.PopupSetTransparency(Sender: TObject);
 begin
-  AlphaBlend := TMenuItem(Sender).Tag;
+  Transparecy := TMenuItem(Sender).Tag;
 end;
 
 procedure TAlphaWindow.PopupSetBrigtness(Sender: TObject);
@@ -493,15 +500,17 @@ begin
   if not Assigned(FParentControl) then
     Exit;
 
-  Width := Max(((FParentControl.Width - Margin * 2) * WidthRelative) div 100, 2);
-  Height := Max(((FParentControl.Height - Margin * 2) * HeightRelative) div 100, 2);
+  Width := Max(((FParentControl.Width - Margin * 2) * WidthRelative)
+    div 100, 2);
+  Height := Max(((FParentControl.Height - Margin * 2) * HeightRelative)
+    div 100, 2);
 end;
 
-procedure TAlphaWindow.SetAlphaBlend(const Value: Byte);
+procedure TAlphaWindow.SetTransparency(const Value: Byte);
 begin
-  FAlphaBlend := Value;
+  FTransparency := Value;
   if not TransparentBackground then
-    Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, FAlphaBlend,
+    Winapi.Windows.SetLayeredWindowAttributes(Handle, 0, GetAlphaBlend,
       LWA_ALPHA);
 end;
 
@@ -560,7 +569,7 @@ begin
     SetLayeredWindowAttributes(Handle, ColorToRGB(TRANSPARENT_COLOR), 0,
       LWA_COLORKEY)
   else
-    SetLayeredWindowAttributes(Handle, 0, FAlphaBlend, LWA_ALPHA);
+    SetLayeredWindowAttributes(Handle, 0, GetAlphaBlend, LWA_ALPHA);
 
   SetColors;
 end;
@@ -622,22 +631,22 @@ begin
   for I := 0 to FMenuItems.Brightness.Count - 1 do
     FMenuItems.Brightness.Items[I].Checked :=
       FBrightness = FMenuItems.Brightness.Items[I].Tag;
-  for I := 0 to FMenuItems.AlphaBlend.Count - 1 do
-    FMenuItems.AlphaBlend.Items[I].Checked :=
-      FAlphaBlend = FMenuItems.AlphaBlend.Items[I].Tag;
+  for I := 0 to FMenuItems.Transparency.Count - 1 do
+    FMenuItems.Transparency.Items[I].Checked :=
+      FTransparency = FMenuItems.Transparency.Items[I].Tag;
   FMenuItems.TransparentBackground.Checked := TransparentBackground;
   for I := 0 to FMenuItems.Position.Count - 1 do
     FMenuItems.Position.Items[I].Checked := Ord(FPosition)
       = FMenuItems.Position.Items[I].Tag;
   for I := 0 to FMenuItems.Width.Count - 1 do
-    FMenuItems.Width.Items[I].Checked := WidthRelative
-      = FMenuItems.Width.Items[I].Tag;
+    FMenuItems.Width.Items[I].Checked :=
+      WidthRelative = FMenuItems.Width.Items[I].Tag;
   for I := 0 to FMenuItems.Height.Count - 1 do
-    FMenuItems.Height.Items[I].Checked := HeightRelative
-      = FMenuItems.Height.Items[I].Tag;
+    FMenuItems.Height.Items[I].Checked :=
+      HeightRelative = FMenuItems.Height.Items[I].Tag;
   for I := 0 to FMenuItems.Margin.Count - 1 do
-    FMenuItems.Margin.Items[I].Checked := Margin
-      = FMenuItems.Margin.Items[I].Tag;
+    FMenuItems.Margin.Items[I].Checked :=
+      Margin = FMenuItems.Margin.Items[I].Tag;
 end;
 
 procedure TAlphaWindow.UpdateVisible;

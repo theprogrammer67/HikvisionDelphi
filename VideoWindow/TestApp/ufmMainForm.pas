@@ -26,9 +26,9 @@ type
     btnCreateViideoWindow: TButton;
     chkBuiltIn: TCheckBox;
     trckbrBrightness: TTrackBar;
-    trckbrAlphaBlend: TTrackBar;
+    trckbrTransparency: TTrackBar;
     lblBrightness: TLabel;
-    lblAlphaBlend: TLabel;
+    lblTransparency: TLabel;
     pgcPages: TPageControl;
     ts1: TTabSheet;
     ts2: TTabSheet;
@@ -40,7 +40,7 @@ type
     procedure btnSetOverlayTextClick(Sender: TObject);
     procedure chkPrintTextClick(Sender: TObject);
     procedure chkVisibleClick(Sender: TObject);
-    procedure trckbrAlphaBlendChange(Sender: TObject);
+    procedure trckbrTransparencyChange(Sender: TObject);
     procedure trckbrBrightnessChange(Sender: TObject);
   private
     FLibHandle: THandle;
@@ -105,7 +105,7 @@ begin
   FVideoWindow.Show;
 
   trckbrBrightness.Position := FVideoWindow.TextPanel.Brightness;
-  trckbrAlphaBlend.Position := FVideoWindow.TextPanel.AlphaBlend;
+  trckbrTransparency.Position := FVideoWindow.TextPanel.Transparecy;
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
@@ -191,10 +191,10 @@ begin
     FVideoWindow.Visible := chkVisible.Checked;
 end;
 
-procedure TfrmMainForm.trckbrAlphaBlendChange(Sender: TObject);
+procedure TfrmMainForm.trckbrTransparencyChange(Sender: TObject);
 begin
   if Assigned(FVideoWindow) then
-    FVideoWindow.TextPanel.AlphaBlend := trckbrAlphaBlend.Position;
+    FVideoWindow.TextPanel.Transparecy := trckbrTransparency.Position;
 end;
 
 procedure TfrmMainForm.trckbrBrightnessChange(Sender: TObject);
