@@ -100,8 +100,8 @@ begin
     FVideoWindow := TVideoWindow.Create(nil);
   FVideoWindow.Align := alClient;
   FVideoWindow.Enabled := True;
-  FVideoWindow.OverlayText := mmoText.Text;
-  FVideoWindow.ShowOverlayText := chkPrintText.Checked;
+  FVideoWindow.TextPanel.Text := mmoText.Text;
+  FVideoWindow.TextPanel.Used := chkPrintText.Checked;
   FVideoWindow.Show;
 
   trckbrBrightness.Position := FVideoWindow.TextPanel.Brightness;
@@ -174,15 +174,15 @@ procedure TfrmMainForm.btnSetOverlayTextClick(Sender: TObject);
 begin
   if Assigned(FVideoWindow) then
   begin
-    FVideoWindow.OverlayText := mmoText.Text;
-    FVideoWindow.ShowOverlayText := chkPrintText.Checked;
+    FVideoWindow.TextPanel.Text := mmoText.Text;
+    FVideoWindow.TextPanel.Used := chkPrintText.Checked;
   end;
 end;
 
 procedure TfrmMainForm.chkPrintTextClick(Sender: TObject);
 begin
   if Assigned(FVideoWindow) then
-    FVideoWindow.ShowOverlayText := chkPrintText.Checked;
+    FVideoWindow.TextPanel.Used := chkPrintText.Checked;
 end;
 
 procedure TfrmMainForm.chkVisibleClick(Sender: TObject);

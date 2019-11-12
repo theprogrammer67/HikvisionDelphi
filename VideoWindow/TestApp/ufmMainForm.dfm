@@ -3410,6 +3410,8 @@ object frmMainForm: TfrmMainForm
     ExplicitHeight = 193
     object ts1: TTabSheet
       Caption = 'ts1'
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 281
       ExplicitHeight = 162
       object pnlVideo: TPanel
@@ -3433,6 +3435,10 @@ object frmMainForm: TfrmMainForm
     object ts2: TTabSheet
       Caption = 'ts2'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
   end
   object appev1: TApplicationEvents

@@ -37,11 +37,12 @@ type
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
     procedure SelectWindow(AHWnd: HWND);
-    procedure SelectItem(AIndex: Integer);
+    procedure SelectItem(AIndex: Integer); overload;
     procedure DoSelectWindow(AIndex: Integer);
     procedure PaintBorders;
     function GetItemIndex: Integer;
     procedure SetItemIndex(const Value: Integer);
+    function GetSelectedWindow: TVideoWindow;
   protected
     procedure WMLButtonDown(var Message: TWMLButtonDown);
       message WM_LBUTTONDOWN;
@@ -64,6 +65,7 @@ type
     property VideoWindows: TObjectList<TVideoWindow> read FVideoWindows;
     property UserID: Integer read FUserID write SetUserID;
     property ItemIndex: Integer read GetItemIndex write SetItemIndex;
+    property SelectedWindow: TVideoWindow read GetSelectedWindow;
     property OnSelectWindow: TSelectWindow read FOnSelectWindow write FOnSelectWindow;
   end;
 
@@ -206,6 +208,17 @@ begin
   for I := 0 to FVideoWindows.Count - 1 do
     if FVideoWindows[I].Selected then
       Exit(I);
+end;
+
+function TVideoPanel.GetSelectedWindow: TVideoWindow;
+var
+  LIndex: Integer;
+begin
+  LIndex := ItemIndex;
+  if LIndex >= 0 then
+    Result := FVideoWindows[LIndex]
+  else
+    Result := nil;
 end;
 
 procedure TVideoPanel.InstallHookParent;
@@ -364,7 +377,7 @@ var
   LVideoWindow: TVideoWindow;
 begin
   for LVideoWindow in VideoWindows do
-    LVideoWindow.ShowOverlayText := AShow;
+    LVideoWindow.TextPanel.Used := AShow;
   Invalidate;
 end;
 

@@ -72,11 +72,7 @@ type
     procedure PrintStatusCaption;
     procedure SetChannel(const Value: Integer);
     procedure SetUsed(const Value: Boolean);
-    function GetOverlayText: string;
-    procedure SetOverlayText(const Value: string);
     procedure CreateTextPanel;
-    procedure SetShowOverlayText(const Value: Boolean);
-    function GetShowOverlayText: Boolean;
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -92,10 +88,10 @@ type
     property Used: Boolean read FUsed write SetUsed;
     property Selected: Boolean read FSelected write FSelected;
     property Channel: Integer read FChannel write SetChannel;
-    property OverlayText: string read GetOverlayText write SetOverlayText;
+//    property OverlayText: string read GetOverlayText write SetOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
-    property ShowOverlayText: Boolean read GetShowOverlayText
-      write SetShowOverlayText;
+//    property ShowOverlayText: Boolean read GetShowOverlayText
+//      write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
     property TextPanel: TAlphaWindow read FTextPanel write FTextPanel;
     property Font;
@@ -193,16 +189,6 @@ begin
   Result := FRealHandle >= 0;
 end;
 
-function TVideoWindow.GetOverlayText: string;
-begin
-  Result := FTextPanel.Text;
-end;
-
-function TVideoWindow.GetShowOverlayText: Boolean;
-begin
-  Result := FTextPanel.Used;
-end;
-
 procedure TVideoWindow.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
@@ -286,7 +272,7 @@ end;
 
 procedure TVideoWindow.PopupSetPrintOverlayText(Sender: TObject);
 begin
-  ShowOverlayText := not ShowOverlayText;
+  TextPanel.Used := not TextPanel.Used;
 end;
 
 procedure TVideoWindow.PrintErrorDescription;
@@ -348,18 +334,6 @@ begin
   end;
 end;
 
-procedure TVideoWindow.SetOverlayText(const Value: string);
-begin
-  if Assigned(FTextPanel) then
-    FTextPanel.Text := Value;
-end;
-
-procedure TVideoWindow.SetShowOverlayText(const Value: Boolean);
-begin
-  if Assigned(FTextPanel) then
-    FTextPanel.Used := Value;
-end;
-
 procedure TVideoWindow.SetUsed(const Value: Boolean);
 begin
   FUsed := Value;
@@ -389,7 +363,7 @@ begin
   else
     FMenuItems.PalyStop.Caption := RsPlay;
 
-  FMenuItems.PrintOverlayText.Checked := ShowOverlayText;
+  FMenuItems.PrintOverlayText.Checked := TextPanel.Used;
 end;
 
 { TSelfParentControl }

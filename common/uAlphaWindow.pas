@@ -14,6 +14,9 @@ const
     'Bottom-Right', 'Bottom-Left');
 
 type
+  TColorScheme = (csWhiteBlack, csRedBlack, csGreenBlack, csBlueBlack,
+    csBlackWhite, csRedWhite, csGreenWhite, csBlueWhite);
+
   TParentControl = class(TCustomControl)
   public
     property Font;
@@ -21,9 +24,6 @@ type
 
   TAlphaWindow = class(TCustomControl)
   private type
-    TColorScheme = (csWhiteBlack, csRedBlack, csGreenBlack, csBlueBlack,
-      csBlackWhite, csRedWhite, csGreenWhite, csBlueWhite);
-
     TColorSchemeParams = record
       Name: string;
       BgColor: TColor;
@@ -36,6 +36,9 @@ type
       AlphaBlend: TMenuItem;
       TransparentBackground: TMenuItem;
       Position: TMenuItem;
+      Width: TMenuItem;
+      Height: TMenuItem;
+      Margin: TMenuItem;
     end;
   private const
     TIMER_INTERVAL = 150;
@@ -96,6 +99,9 @@ type
     procedure PopupSetAlphaBlend(Sender: TObject);
     procedure PopupSetTransparentBackground(Sender: TObject);
     procedure PopupSetSetPosition(Sender: TObject);
+    procedure PopupSetWidth(Sender: TObject);
+    procedure PopupSetHeight(Sender: TObject);
+    procedure PopupSetMargin(Sender: TObject);
   private
     procedure UpdateVisible;
     procedure SetUsed(const Value: Boolean);
@@ -325,6 +331,45 @@ begin
     FMenuItems.Position.Add(LSubItem);
   end;
 
+  FMenuItems.Width := TMenuItem.Create(FMenu);
+  FMenuItems.Width.Caption := 'Width';
+  FMenu.Items.Add(FMenuItems.Width);
+  for I := 1 to 4 do
+  begin
+    LValue := I * 25;
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := IntToStr(LValue) + '%';
+    LSubItem.Tag := LValue;
+    LSubItem.OnClick := PopupSetWidth;
+    FMenuItems.Width.Add(LSubItem);
+  end;
+
+  FMenuItems.Height := TMenuItem.Create(FMenu);
+  FMenuItems.Height.Caption := 'Height';
+  FMenu.Items.Add(FMenuItems.Height);
+  for I := 1 to 4 do
+  begin
+    LValue := I * 25;
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := IntToStr(LValue) + '%';
+    LSubItem.Tag := LValue;
+    LSubItem.OnClick := PopupSetHeight;
+    FMenuItems.Height.Add(LSubItem);
+  end;
+
+  FMenuItems.Margin := TMenuItem.Create(FMenu);
+  FMenuItems.Margin.Caption := 'Margin';
+  FMenu.Items.Add(FMenuItems.Margin);
+  for I := 0 to 3 do
+  begin
+    LValue := I * 5;
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := IntToStr(LValue) + ' px';
+    LSubItem.Tag := LValue;
+    LSubItem.OnClick := PopupSetMargin;
+    FMenuItems.Margin.Add(LSubItem);
+  end;
+
   PopupMenu := FMenu;
 end;
 
@@ -396,6 +441,16 @@ begin
   ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
 end;
 
+procedure TAlphaWindow.PopupSetHeight(Sender: TObject);
+begin
+  HeightRelative := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.PopupSetMargin(Sender: TObject);
+begin
+  Margin := TMenuItem(Sender).Tag;
+end;
+
 procedure TAlphaWindow.PopupSetSetPosition(Sender: TObject);
 begin
   Position := TWindowPosition(TMenuItem(Sender).Tag);
@@ -404,6 +459,11 @@ end;
 procedure TAlphaWindow.PopupSetTransparentBackground(Sender: TObject);
 begin
   TransparentBackground := not TransparentBackground;
+end;
+
+procedure TAlphaWindow.PopupSetWidth(Sender: TObject);
+begin
+  WidthRelative := TMenuItem(Sender).Tag;
 end;
 
 procedure TAlphaWindow.RegisterObj;
@@ -433,8 +493,8 @@ begin
   if not Assigned(FParentControl) then
     Exit;
 
-  Width := Max(((FParentControl.Width - Margin) * WidthRelative) div 100, 2);
-  Height := Max(((FParentControl.Height - Margin) * HeightRelative) div 100, 2);
+  Width := Max(((FParentControl.Width - Margin * 2) * WidthRelative) div 100, 2);
+  Height := Max(((FParentControl.Height - Margin * 2) * HeightRelative) div 100, 2);
 end;
 
 procedure TAlphaWindow.SetAlphaBlend(const Value: Byte);
@@ -449,7 +509,6 @@ procedure TAlphaWindow.SetBrightness(const Value: Integer);
 begin
   FBrightness := Value;
   SetColors;
-  Invalidate;
 end;
 
 procedure TAlphaWindow.SetColors;
@@ -461,27 +520,25 @@ begin
 
   Canvas.Brush.Color := Color;
   Canvas.Font.Color := COLORSCHEME_PARAMS[FColorScheme].FontColor;
+  Invalidate;
 end;
 
 procedure TAlphaWindow.SetColorScheme(const Value: TColorScheme);
 begin
   FColorScheme := Value;
   SetColors;
-  Invalidate;
 end;
 
 procedure TAlphaWindow.SetHeightRelative(const Value: Integer);
 begin
   FHeightRelative := Value;
-  if Visible then
-    Invalidate;
+  CalculateSize;
 end;
 
 procedure TAlphaWindow.SetMargin(const Value: Integer);
 begin
   FMargin := Value;
-  if Visible then
-    Invalidate;
+  CalculateSize;
 end;
 
 procedure TAlphaWindow.SetPosition(const Value: TWindowPosition);
@@ -493,8 +550,7 @@ end;
 procedure TAlphaWindow.SetText(const Value: string);
 begin
   FText := Value;
-  if Visible then
-    Invalidate;
+  Invalidate;
 end;
 
 procedure TAlphaWindow.SetTransparentBackground(const Value: Boolean);
@@ -518,21 +574,30 @@ end;
 procedure TAlphaWindow.SetWidthRelative(const Value: Integer);
 begin
   FWidthRelative := Value;
-  if Visible then
-    Invalidate;
+  CalculateSize;
 end;
 
 procedure TAlphaWindow.ShowText;
 var
   LRect: TRect;
+  LBrushColor: TColor;
 begin
   if (Width <= (Margin * 2 + 1)) or (Height <= (Margin * 2 + 1)) then
     Exit;
 
-  // Canvas.Font.Size := Font.Size;
-  // Canvas.Font.Name := Font.Name;
-  LRect := Rect(Margin, Margin, Width + Margin, Height + Margin);
+  LRect := Rect(Margin, Margin, Width - Margin, Height - Margin);
   Canvas.TextRect(LRect, FText, [tfLeft, tfTop, tfWordBreak]);
+  LBrushColor := Canvas.Brush.Color;
+  try
+    InflateRect(LRect, Margin, Margin);
+    if TransparentBackground then
+      Canvas.Brush.Color := clSilver
+    else
+      Canvas.Brush.Color := AdjustColor(Color, 50);
+    Canvas.FrameRect(LRect);
+  finally
+    Canvas.Brush.Color := LBrushColor;
+  end;
 end;
 
 class procedure TAlphaWindow.UninstallHookParent;
@@ -564,6 +629,15 @@ begin
   for I := 0 to FMenuItems.Position.Count - 1 do
     FMenuItems.Position.Items[I].Checked := Ord(FPosition)
       = FMenuItems.Position.Items[I].Tag;
+  for I := 0 to FMenuItems.Width.Count - 1 do
+    FMenuItems.Width.Items[I].Checked := WidthRelative
+      = FMenuItems.Width.Items[I].Tag;
+  for I := 0 to FMenuItems.Height.Count - 1 do
+    FMenuItems.Height.Items[I].Checked := HeightRelative
+      = FMenuItems.Height.Items[I].Tag;
+  for I := 0 to FMenuItems.Margin.Count - 1 do
+    FMenuItems.Margin.Items[I].Checked := Margin
+      = FMenuItems.Margin.Items[I].Tag;
 end;
 
 procedure TAlphaWindow.UpdateVisible;
