@@ -14,7 +14,6 @@ const
     'Bottom-Right', 'Bottom-Left');
 
 type
-
   TParentControl = class(TCustomControl)
   public
     property Font;
@@ -82,13 +81,21 @@ type
       AlParam: LPARAM): LRESULT; stdcall; static;
     class procedure InstallHookParent;
     class procedure UninstallHookParent;
-  private
+  private // Обработка сообщений
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
     procedure CMVisibleChanged(var Message: TMessage);
       message CM_VISIBLECHANGED;
-    // procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged);
       message WM_WINDOWPOSCHANGED;
+  private // Меню
+    procedure CreatePopupMenu;
+    procedure UpdatePopupItems;
+    procedure OnPopup(Sender: TObject);
+    procedure PopupSetColorScheme(Sender: TObject);
+    procedure PopupSetBrigtness(Sender: TObject);
+    procedure PopupSetAlphaBlend(Sender: TObject);
+    procedure PopupSetTransparentBackground(Sender: TObject);
+    procedure PopupSetSetPosition(Sender: TObject);
   private
     procedure UpdateVisible;
     procedure SetUsed(const Value: Boolean);
@@ -102,30 +109,20 @@ type
     procedure SetColorScheme(const Value: TColorScheme);
     procedure SetBrightness(const Value: Integer);
     procedure SetAlphaBlend(const Value: Byte);
-    procedure CreatePopupMenu;
-    procedure UpdatePopupItems;
-    procedure OnPopup(Sender: TObject);
-    procedure PopupSetColorScheme(Sender: TObject);
-    procedure PopupSetBrigtness(Sender: TObject);
-    procedure PopupSetAlphaBlend(Sender: TObject);
-    procedure PopupSetTransparentBackground(Sender: TObject);
-    procedure PopupSetSetPosition(Sender: TObject);
     procedure SetTransparentBackground(const Value: Boolean);
     procedure SetPosition(const Value: TWindowPosition);
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
     procedure CreateWindowHandle(const Params: TCreateParams); override;
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer); override;
   public
+    procedure CalculateSize;
+    procedure CalculatePosition;
+  public // Конструкторы/Деструкторы
     class constructor Create;
     class destructor Destroy;
     constructor Create(AParent: TCustomControl); reintroduce;
     destructor Destroy; override;
-  public
-    procedure CalculateSize;
-    procedure CalculatePosition;
   public
     property Text: string read FText write SetText;
     property Margin: Integer read FMargin write SetMargin;
@@ -281,6 +278,8 @@ begin
     LSubItem.Tag := Ord(LScheme);
     LSubItem.OnClick := PopupSetColorScheme;
     FMenuItems.ColorScheme.Add(LSubItem);
+    if Ord(LScheme) = 3 then
+      FMenuItems.ColorScheme.NewBottomLine;
   end;
 
   FMenuItems.Brightness := TMenuItem.Create(FMenu);
@@ -303,7 +302,7 @@ begin
   begin
     LValue := I * 64 - 1;
     LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(Round(LValue / (256 / 100))) + '%';
+    LSubItem.Caption := IntToStr(100 - Round(LValue / (256 / 100))) + '%';
     LSubItem.Tag := LValue;
     LSubItem.OnClick := PopupSetAlphaBlend;
     FMenuItems.AlphaBlend.Add(LSubItem);
@@ -353,13 +352,6 @@ class procedure TAlphaWindow.InstallHookParent;
 begin
   FParentWndHook := SetWindowsHookEx(WH_CALLWNDPROCRET, @CallWndRetProc, 0,
     GetCurrentThreadID);
-end;
-
-procedure TAlphaWindow.MouseDown(Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  inherited;
-  // MessageBox(Self.Handle, 'MouseDown', 'Test', MB_OK);
 end;
 
 procedure TAlphaWindow.OnPopup(Sender: TObject);

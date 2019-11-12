@@ -12,41 +12,6 @@ const
   WM_CHANGESELECTED = WM_USER + 2;
 
 type
-  TTextPanelPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
-
-  TVideoWindow = class;
-
-  TTextRectangle = class
-  private const
-    DEF_BKALPHABLEND = 128;
-    DEF_BKCOLOR = clWhite;
-    DEF_WIDTH = 50;
-    DEF_HEIGHT = 50;
-  private
-    FParent: TVideoWindow;
-    FWidth: Integer;
-    FHeight: Integer;
-    FPosition: TTextPanelPosition;
-    FText: string;
-    FBackgroundAlfaBlend: Byte;
-    FRectangle: TRect;
-    FBackground: TBitmap;
-  private
-    procedure Resize(ARefresh: Boolean = True);
-    procedure SetHeight(const Value: Integer);
-    procedure SetPosition(const Value: TTextPanelPosition);
-    procedure SetWidth(const Value: Integer);
-  public
-    constructor Create(AParent: TVideoWindow);
-    destructor Destroy; override;
-    procedure DrawText(hDc: IntPtr);
-  public
-    property Position: TTextPanelPosition read FPosition write SetPosition;
-    property Width: Integer read FWidth write SetWidth;
-    property Height: Integer read FHeight write SetHeight;
-    property Text: string read FText write FText;
-  end;
-
   TSelfParentControl = class(TCustomControl)
   private const
     DEF_FONTNAME = 'Courier New';
@@ -71,6 +36,8 @@ type
       PalyStop: TMenuItem;
     end;
   public const
+    STATUS_FONTSIZE = 12;
+    STATUS_FONTNAME = 'Impact';
     STATUS_FONTCOLOR = $00FF96A0;
   private const
     CAPTION_DISABLED: string = 'DISABLED';
@@ -78,51 +45,31 @@ type
     DEF_COLOR = clNavy;
     ERROR_FONTCOLOR = clYellow;
     ERROR_FONTSIZE = 10;
-    STATUS_FONTNAME = 'Impact';
-    STATUS_FONTSIZE = 24;
   private
-    FId: Cardinal;
     FUsed: Boolean;
     FSelected: Boolean;
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
-    // FShowOverlayText: Boolean;
     FLastErrorDecription: string;
-    // FTextRectangle: TTextRectangle;
     FTextPanel: TAlphaWindow;
-    // FEvenFrame: Boolean;
-
     FMenu: TPopupMenu;
     FMenuItems: TMenuItems;
-  private
-    class var FObjects: TThreadList<TVideoWindow>;
-    class var FGlobalId: Cardinal;
-    procedure RegisterObj;
-    procedure UnRegisterObj;
-  public
-    class constructor Create;
-    class destructor Destroy;
-    constructor Create(AParent: TWinControl); reintroduce;
-    destructor Destroy; override;
-  private
-    class procedure DrawFun(lRealHandle: LongInt; hDc: IntPtr; dwUser: UINT);
-      stdcall; static;
-    procedure DrawFunction(hDc: IntPtr);
-  private
+  private // Обработка сообщений
     procedure WMPlayVideo(var Message: TMessage); message WM_PLAYVIDEO;
     procedure WMStopVideo(var Message: TMessage); message WM_STOPVIDEO;
-  private
-    procedure ClearError;
-    function GetIsPlaying: Boolean;
-    procedure PrintErrorDescription;
-    procedure PrintStatusCaption;
+  private // Меню
     procedure CreatePopupMenu;
     procedure OnPopup(Sender: TObject);
     procedure PopupSetChannel(Sender: TObject);
     procedure PopupPlayStop(Sender: TObject);
     procedure PopupSetPrintOverlayText(Sender: TObject);
     procedure UpdatePopupItems;
+  private
+    procedure ClearError;
+    function GetIsPlaying: Boolean;
+    procedure PrintErrorDescription;
+    procedure PrintStatusCaption;
     procedure SetChannel(const Value: Integer);
     procedure SetUsed(const Value: Boolean);
     function GetOverlayText: string;
@@ -138,8 +85,10 @@ type
   public
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
+  public // Конструкторы/Деструкторы
+    constructor Create(AParent: TWinControl); reintroduce;
+    destructor Destroy; override;
   public
-    property Font;
     property Used: Boolean read FUsed write SetUsed;
     property Selected: Boolean read FSelected write FSelected;
     property Channel: Integer read FChannel write SetChannel;
@@ -149,11 +98,16 @@ type
       write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
     property TextPanel: TAlphaWindow read FTextPanel write FTextPanel;
+    property Font;
   end;
 
 implementation
 
 uses System.Types;
+
+resourcestring
+  RsPlay = 'Play';
+  RsStop = 'Stop';
 
 { TWideoWindow }
 
@@ -181,9 +135,7 @@ begin
     Font.Color := DEF_FONTCOLOR;
   end;
 
-  RegisterObj;
   CreatePopupMenu;
-
   CreateTextPanel;
 end;
 
@@ -227,59 +179,13 @@ begin
   FTextPanel := TAlphaWindow.Create(Self);
 end;
 
-class constructor TVideoWindow.Create;
-begin
-  FObjects := TThreadList<TVideoWindow>.Create;
-  FGlobalId := 0;
-end;
-
 destructor TVideoWindow.Destroy;
 begin
   StopLiveVideo;
-  UnRegisterObj;
   FreeAndNil(FMenu);
   FreeAndNil(FTextPanel);
   inherited;
   FreeAndNil(FParentForm);
-end;
-
-class destructor TVideoWindow.Destroy;
-begin
-  FreeAndNil(FObjects);
-end;
-
-class procedure TVideoWindow.DrawFun(lRealHandle: Integer; hDc: IntPtr;
-  dwUser: UINT);
-var
-  LObj: TVideoWindow;
-  I: Integer;
-  LObjects: TList<TVideoWindow>;
-begin
-  LObjects := FObjects.LockList;
-  try
-    for I := 0 to LObjects.Count - 1 do
-    begin
-      LObj := LObjects[I];
-      if LObj.FId = dwUser then
-      begin
-        LObj.DrawFunction(hDc);
-        Break;
-      end;
-    end;
-  finally
-    FObjects.UnlockList;
-  end;
-end;
-
-procedure TVideoWindow.DrawFunction(hDc: IntPtr);
-begin
-  // if (not FShowOverlayText) or (Length(OverlayText) = 0) or (not Visible) or
-  // (not Used) then
-  // Exit;
-
-  // FEvenFrame := not FEvenFrame;
-  // if not FEvenFrame then // Обрабатываем только нечетные вызовы
-  // FTextRectangle.DrawText(hDc);
 end;
 
 function TVideoWindow.GetIsPlaying: Boolean;
@@ -359,9 +265,8 @@ begin
   FRealHandle := NET_DVR_RealPlay_V40(UserID, LPreviewInfo, nil, 0);
   if FRealHandle < 0 then
     RaiseLastHVError;
-  // FEvenFrame := False;
-  if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
-    RaiseLastHVError;
+//  if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
+//    RaiseLastHVError;
 
   FTextPanel.Enabled := True;
 end;
@@ -416,20 +321,13 @@ begin
     Exit;
 
   Canvas.Font.Size := 12;
-  Canvas.Font.Name := 'Impact';
+  Canvas.Font.Name := STATUS_FONTNAME;
   Canvas.Font.Color := STATUS_FONTCOLOR;
   Canvas.Brush.Style := bsClear;
 
   LRect := ClientRect;
   DrawText(Canvas.Handle, LText, Length(LText), LRect, DT_SINGLELINE or
     DT_CENTER or DT_VCENTER);
-end;
-
-procedure TVideoWindow.RegisterObj;
-begin
-  FObjects.Add(Self);
-  Self.FId := FGlobalId;
-  Inc(FGlobalId);
 end;
 
 procedure TVideoWindow.Resize;
@@ -478,11 +376,6 @@ begin
   Invalidate;
 end;
 
-procedure TVideoWindow.UnRegisterObj;
-begin
-  FObjects.Remove(Self);
-end;
-
 procedure TVideoWindow.UpdatePopupItems;
 var
   I: Integer;
@@ -492,9 +385,9 @@ begin
       FChannel = FMenuItems.Channel.Items[I - 1].Tag;
 
   if IsPlaying then
-    FMenuItems.PalyStop.Caption := 'Stop'
+    FMenuItems.PalyStop.Caption := RsStop
   else
-    FMenuItems.PalyStop.Caption := 'Play';
+    FMenuItems.PalyStop.Caption := RsPlay;
 
   FMenuItems.PrintOverlayText.Checked := ShowOverlayText;
 end;
@@ -558,112 +451,6 @@ begin
     FParentForm.Visible := True;
 
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
-end;
-
-{ TTextRectangle }
-
-procedure TTextRectangle.Resize(ARefresh: Boolean);
-begin
-  if not Assigned(FParent) or (FParent.Width = 0) or (FParent.Height = 0) then
-    Exit;
-
-  FRectangle.Left := 1;
-  FRectangle.Top := 1;
-
-  FRectangle.Width := Max(((FParent.Width - 2) * Width) div 100, 2);
-  FRectangle.Height := Max(((FParent.Height - 2) * Height) div 100, 2);
-
-  if FPosition in [tpTopRight, tpBottomRight] then
-    FRectangle.Offset(FParent.Width - FRectangle.Width - 1, 0);
-
-  if FPosition in [tpBottomLeft, tpBottomRight] then
-    FRectangle.Offset(0, FParent.Height - FRectangle.Height - 1);
-
-  FBackground.Canvas.Lock;
-  try
-    FBackground.SetSize(FRectangle.Width, FRectangle.Height);
-    FBackground.Canvas.Rectangle(0, 0, FBackground.Width, FBackground.Height);
-  finally
-    FBackground.Canvas.Unlock;
-  end;
-
-  if ARefresh then
-    FParent.Invalidate;
-end;
-
-constructor TTextRectangle.Create(AParent: TVideoWindow);
-begin
-  FBackground := TBitmap.Create;
-  FBackground.PixelFormat := pfDevice;
-  FBackground.Canvas.Pen.Color := DEF_BKCOLOR;
-  FBackground.Canvas.Brush.Color := DEF_BKCOLOR;
-  FBackgroundAlfaBlend := DEF_BKALPHABLEND;
-
-  FParent := AParent;
-  FPosition := tpTopLeft;
-  FWidth := DEF_WIDTH;
-  FHeight := DEF_HEIGHT;
-  Resize(False);
-end;
-
-destructor TTextRectangle.Destroy;
-begin
-  FreeAndNil(FBackground);
-  inherited;
-end;
-
-procedure TTextRectangle.DrawText(hDc: IntPtr);
-var
-  LObj: HGDIOBJ;
-  LHFont: HFONT;
-  Desc: TBlendFunction;
-begin
-  // Фон
-  Desc.BlendOp := AC_SRC_OVER;
-  Desc.BlendFlags := 0;
-  Desc.SourceConstantAlpha := FBackgroundAlfaBlend;
-  Desc.AlphaFormat := 0;
-
-  FBackground.Canvas.Lock;
-  try
-    Winapi.Windows.AlphaBlend(hDc, FRectangle.Left, FRectangle.Top,
-      FRectangle.Width, FRectangle.Height, FBackground.Canvas.Handle, 0, 0,
-      FBackground.Width, FBackground.Height, Desc);
-  finally
-    FBackground.Canvas.Unlock;
-  end;
-
-  // Текст
-  LHFont := CreateFont(FParent.Font.Size, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0,
-    2, 0, PWideChar(FParent.Font.Name));
-  LObj := SelectObject(hDc, LHFont);
-  try
-    SetBkMode(hDc, TRANSPARENT);
-    SetTextColor(hDc, FParent.Font.Color);
-    Winapi.Windows.DrawText(hDc, PWideChar(FParent.OverlayText),
-      Length(FParent.OverlayText), FRectangle, DT_LEFT or DT_TOP or
-      DT_WORDBREAK);
-  finally
-    DeleteObject(SelectObject(hDc, LObj));
-  end;
-end;
-
-procedure TTextRectangle.SetHeight(const Value: Integer);
-begin
-  FHeight := Value;
-  Resize;
-end;
-
-procedure TTextRectangle.SetPosition(const Value: TTextPanelPosition);
-begin
-  FPosition := Value;
-  Resize;
-end;
-
-procedure TTextRectangle.SetWidth(const Value: Integer);
-begin
-  FWidth := Value;
-  Resize;
 end;
 
 end.
