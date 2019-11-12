@@ -23,6 +23,15 @@ type
   end;
 
   TAlphaWindow = class(TCustomControl)
+  public
+  class var
+    DefMargin: Integer;
+    DefWidthRelative: Integer;
+    DefHeightRelative: Integer;
+    DefBrightness: Integer;
+    DefTransparency: Integer;
+    DefColorScheme: TColorScheme;
+    DefTransparentBg: Boolean;
   private type
     TColorSchemeParams = record
       Name: string;
@@ -48,6 +57,7 @@ type
     TRANSPARENT_COLOR = clTeal;
     DEF_BRIGHTNESS = -50;
     DEF_TRANSPARENCY = 50;
+    DEF_TRANSPARENT_BG = False;
     DEF_COLORSCHEME = csGreenWhite;
     COLORSCHEME_PARAMS: array [TColorScheme] of TColorSchemeParams =
       ((Name: 'White/Black'; BgColor: clWhite; FontColor: clBlack),
@@ -238,13 +248,14 @@ begin
   Canvas.Brush.Style := bsClear;
   Font := FParentControl.Font;
   Canvas.Font := Font;
-  Transparecy := DEF_TRANSPARENCY;
-  Brightness := DEF_BRIGHTNESS;
-  ColorScheme := DEF_COLORSCHEME;
-  TransparentBackground := False;
-  FMargin := DEF_MARGIN;
-  FWidthRelative := DEF_WIDTHRELATIVE;
-  FHeightRelative := DEF_HEIGHTRELATIVE;
+
+  Transparecy := DefTransparency;
+  Brightness := DefBrightness;
+  ColorScheme := DefColorScheme;
+  TransparentBackground := DefTransparentBg;
+  FMargin := DefMargin;
+  FWidthRelative := DefWidthRelative;
+  FHeightRelative := DefHeightRelative;
 
   RegisterObj;
   CreatePopupMenu;
@@ -252,6 +263,14 @@ end;
 
 class constructor TAlphaWindow.Create;
 begin
+  DefMargin := DEF_MARGIN;
+  DefWidthRelative := DEF_WIDTHRELATIVE;
+  DefHeightRelative := DEF_HEIGHTRELATIVE;
+  DefBrightness := DEF_BRIGHTNESS;
+  DefTransparency := DEF_TRANSPARENCY;
+  DefColorScheme := DEF_COLORSCHEME;
+  DefTransparentBg := DEF_TRANSPARENT_BG;
+
   FObjects := TThreadList<TAlphaWindow>.Create;
   FParentWndHook := 0;
   InstallHookParent;
