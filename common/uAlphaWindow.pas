@@ -49,6 +49,7 @@ type
       Width: TMenuItem;
       Height: TMenuItem;
       Margin: TMenuItem;
+      FontSize: TMenuItem;
     end;
   private const
     TIMER_INTERVAL = 150;
@@ -110,10 +111,11 @@ type
     procedure PopupSetBrigtness(Sender: TObject);
     procedure PopupSetTransparency(Sender: TObject);
     procedure PopupSetTransparentBackground(Sender: TObject);
-    procedure PopupSetSetPosition(Sender: TObject);
+    procedure PopupSetPosition(Sender: TObject);
     procedure PopupSetWidth(Sender: TObject);
     procedure PopupSetHeight(Sender: TObject);
     procedure PopupSetMargin(Sender: TObject);
+    procedure PopupSetFontSize(Sender: TObject);
   private
     function GetAlphaBlend: Byte;
     procedure UpdateVisible;
@@ -249,7 +251,7 @@ begin
 
   Canvas.Brush.Style := bsClear;
   Font := FParentControl.Font;
-  Canvas.Font := Font;
+  Canvas.Font := FParentControl.Font;
 
   Position := DefPosition;
   Transparecy := DefTransparency;
@@ -351,7 +353,7 @@ begin
     LSubItem := TMenuItem.Create(FMenu);
     LSubItem.Caption := WPOSITION_NAMES[LPosition];
     LSubItem.Tag := Ord(LPosition);
-    LSubItem.OnClick := PopupSetSetPosition;
+    LSubItem.OnClick := PopupSetPosition;
     FMenuItems.Position.Add(LSubItem);
   end;
 
@@ -392,6 +394,19 @@ begin
     LSubItem.Tag := LValue;
     LSubItem.OnClick := PopupSetMargin;
     FMenuItems.Margin.Add(LSubItem);
+  end;
+
+  FMenuItems.FontSize := TMenuItem.Create(FMenu);
+  FMenuItems.FontSize.Caption := 'Font size';
+  FMenu.Items.Add(FMenuItems.FontSize);
+  for I := 0 to 6 do
+  begin
+    LValue := 12 + I * 2;
+    LSubItem := TMenuItem.Create(FMenu);
+    LSubItem.Caption := IntToStr(LValue) + ' pt';
+    LSubItem.Tag := LValue;
+    LSubItem.OnClick := PopupSetFontSize;
+    FMenuItems.FontSize.Add(LSubItem);
   end;
 
   PopupMenu := FMenu;
@@ -471,6 +486,12 @@ begin
   ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
 end;
 
+procedure TAlphaWindow.PopupSetFontSize(Sender: TObject);
+begin
+  Canvas.Font.Size := TMenuItem(Sender).Tag;
+  Invalidate;
+end;
+
 procedure TAlphaWindow.PopupSetHeight(Sender: TObject);
 begin
   HeightRelative := TMenuItem(Sender).Tag;
@@ -481,7 +502,7 @@ begin
   Margin := TMenuItem(Sender).Tag;
 end;
 
-procedure TAlphaWindow.PopupSetSetPosition(Sender: TObject);
+procedure TAlphaWindow.PopupSetPosition(Sender: TObject);
 begin
   Position := TWindowPosition(TMenuItem(Sender).Tag);
 end;
@@ -670,6 +691,9 @@ begin
   for I := 0 to FMenuItems.Margin.Count - 1 do
     FMenuItems.Margin.Items[I].Checked :=
       Margin = FMenuItems.Margin.Items[I].Tag;
+  for I := 0 to FMenuItems.FontSize.Count - 1 do
+    FMenuItems.FontSize.Items[I].Checked :=
+      Canvas.Font.Size = FMenuItems.FontSize.Items[I].Tag;
 end;
 
 procedure TAlphaWindow.UpdateVisible;

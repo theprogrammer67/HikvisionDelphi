@@ -94,6 +94,7 @@ end;
 
 procedure TfrmMainForm.btnCreateViideoWindowClick(Sender: TObject);
 begin
+  pnlVideo.Font.Size := 12;
   if chkBuiltIn.Checked then
     FVideoWindow := TVideoWindow.Create(pnlVideo)
   else
