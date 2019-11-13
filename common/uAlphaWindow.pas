@@ -132,6 +132,8 @@ type
     procedure SetTransparency(const Value: Byte);
     procedure SetTransparentBackground(const Value: Boolean);
     procedure SetPosition(const Value: TWindowPosition);
+    function GetFontSize: Integer;
+    procedure SetFontSize(const Value: Integer);
   protected
     procedure Paint; override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -157,6 +159,7 @@ type
     property TransparentBg: Boolean read FTransparentBg
       write SetTransparentBackground;
     property Position: TWindowPosition read FPosition write SetPosition;
+    property FontSize: Integer read GetFontSize write SetFontSize;
   end;
 
 implementation
@@ -432,6 +435,11 @@ begin
   Result := 255 - MulDiv(255, FTransparency, 100);
 end;
 
+function TAlphaWindow.GetFontSize: Integer;
+begin
+  Result := Canvas.Font.Size;
+end;
+
 class destructor TAlphaWindow.Destroy;
 begin
   UninstallHookParent;
@@ -580,6 +588,11 @@ procedure TAlphaWindow.SetColorScheme(const Value: TColorScheme);
 begin
   FColorScheme := Value;
   SetColors;
+end;
+
+procedure TAlphaWindow.SetFontSize(const Value: Integer);
+begin
+  Canvas.Font.Size := Value;
 end;
 
 procedure TAlphaWindow.SetHeightRelative(const Value: Integer);
