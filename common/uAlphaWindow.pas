@@ -7,7 +7,7 @@ uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
   Vcl.ExtCtrls, Vcl.Menus, System.UITypes;
 
 type
-  TWindowPosition = (tpTopLeft, tpTopRight, tpBottomRight, tpBottomLeft);
+  TWindowPosition = (wpTopLeft, wpTopRight, wpBottomRight, wpBottomLeft);
 
 const
   WPOSITION_NAMES: array [TWindowPosition] of string = ('Top-Left', 'Top-Right',
@@ -32,6 +32,7 @@ type
     DefTransparency: Integer;
     DefColorScheme: TColorScheme;
     DefTransparentBg: Boolean;
+    DefPosition: TWindowPosition;
   private type
     TColorSchemeParams = record
       Name: string;
@@ -58,6 +59,7 @@ type
     DEF_BRIGHTNESS = -50;
     DEF_TRANSPARENCY = 50;
     DEF_TRANSPARENT_BG = False;
+    DEF_POSITION = wpTopLeft;
     DEF_COLORSCHEME = csGreenWhite;
     COLORSCHEME_PARAMS: array [TColorScheme] of TColorSchemeParams =
       ((Name: 'White/Black'; BgColor: clWhite; FontColor: clBlack),
@@ -270,6 +272,7 @@ begin
   DefTransparency := DEF_TRANSPARENCY;
   DefColorScheme := DEF_COLORSCHEME;
   DefTransparentBg := DEF_TRANSPARENT_BG;
+  DefPosition := DEF_POSITION;
 
   FObjects := TThreadList<TAlphaWindow>.Create;
   FParentWndHook := 0;
@@ -503,12 +506,12 @@ var
 begin
   LLeftTop := FParentControl.ClientToScreen(Point(0, 0));
 
-  if FPosition in [tpTopRight, tpBottomRight] then
+  if FPosition in [wpTopRight, wpBottomRight] then
     Left := LLeftTop.X + (FParentControl.Width - Width - Margin)
   else
     Left := LLeftTop.X + Margin;
 
-  if FPosition in [tpBottomLeft, tpBottomRight] then
+  if FPosition in [wpBottomLeft, wpBottomRight] then
     Top := LLeftTop.Y + (FParentControl.Height - Height - Margin)
   else
     Top := LLeftTop.Y + Margin;
