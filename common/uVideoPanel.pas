@@ -12,12 +12,17 @@ type
   TSelectWindow = procedure(AIndex: Integer) of object;
 
   TVideoPanel = class(TSelfParentControl)
+  public
+  class var
+    DefFontSize: Integer;
+    DefFontName: string;
+    DefFontColor: TColor;
   public const
     WIN_COUNT: Byte = 16;
   private const
     DEF_COLOR = TVideoWindow.STATUS_FONTCOLOR;
     DEF_FONTNAME = 'Courier New';
-    DEF_FONTSIZE = 24;
+    DEF_FONTSIZE = 12;
     DEF_FONTCOLOR = clBlack;
   private
     class var FObject: TVideoPanel;
@@ -51,6 +56,7 @@ type
     procedure Paint; override;
     procedure Resize; override;
   public
+    class constructor Create;
     constructor Create(AParent: HWND); overload; override;
     constructor Create(AParent: HWND; APanelMode: TPanelMode); overload;
     destructor Destroy; override;
@@ -66,7 +72,8 @@ type
     property UserID: Integer read FUserID write SetUserID;
     property ItemIndex: Integer read GetItemIndex write SetItemIndex;
     property SelectedWindow: TVideoWindow read GetSelectedWindow;
-    property OnSelectWindow: TSelectWindow read FOnSelectWindow write FOnSelectWindow;
+    property OnSelectWindow: TSelectWindow read FOnSelectWindow
+      write FOnSelectWindow;
   end;
 
 implementation
@@ -146,9 +153,9 @@ begin
   DoubleBuffered := True;
 
   Color := DEF_COLOR;
-  Font.Name := DEF_FONTNAME;
-  Font.Size := DEF_FONTSIZE;
-  Font.Color := DEF_FONTCOLOR;
+  Font.Name := DefFontName;
+  Font.Size := DefFontSize;
+  Font.Color := DefFontColor;
   Align := alClient;
 
   FVideoWindows := TObjectList<TVideoWindow>.Create;
@@ -169,6 +176,13 @@ constructor TVideoPanel.Create(AParent: HWND; APanelMode: TPanelMode);
 begin
   Create(AParent);
   FPanelMode := APanelMode;
+end;
+
+class constructor TVideoPanel.Create;
+begin
+  DefFontSize := DEF_FONTSIZE;
+  DefFontName := DEF_FONTNAME;
+  DefFontColor := DEF_FONTCOLOR;
 end;
 
 destructor TVideoPanel.Destroy;

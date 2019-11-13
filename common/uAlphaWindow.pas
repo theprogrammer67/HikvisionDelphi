@@ -251,13 +251,14 @@ begin
   Font := FParentControl.Font;
   Canvas.Font := Font;
 
+  Position := DefPosition;
   Transparecy := DefTransparency;
   Brightness := DefBrightness;
   ColorScheme := DefColorScheme;
   TransparentBg := DefTransparentBg;
-  FMargin := DefMargin;
-  FWidthRelative := DefWidthRelative;
-  FHeightRelative := DefHeightRelative;
+  Margin := DefMargin;
+  WidthRelative := DefWidthRelative;
+  HeightRelative := DefHeightRelative;
 
   RegisterObj;
   CreatePopupMenu;

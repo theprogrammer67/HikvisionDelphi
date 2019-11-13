@@ -15,7 +15,7 @@ type
   TSelfParentControl = class(TCustomControl)
   private const
     DEF_FONTNAME = 'Courier New';
-    DEF_FONTSIZE = 24;
+    DEF_FONTSIZE = 12;
     DEF_FONTCOLOR = clLime;
   protected
     FParentForm: TForm;
@@ -306,7 +306,7 @@ begin
   else
     Exit;
 
-  Canvas.Font.Size := 12;
+  Canvas.Font.Size := STATUS_FONTSIZE;
   Canvas.Font.Name := STATUS_FONTNAME;
   Canvas.Font.Color := STATUS_FONTCOLOR;
   Canvas.Brush.Style := bsClear;
