@@ -106,7 +106,7 @@ begin
   FVideoWindow.Show;
 
   trckbrBrightness.Position := FVideoWindow.TextPanel.Brightness;
-  trckbrTransparency.Position := FVideoWindow.TextPanel.Transparecy;
+  trckbrTransparency.Position := FVideoWindow.TextPanel.Transparency;
 end;
 
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
@@ -195,7 +195,7 @@ end;
 procedure TfrmMainForm.trckbrTransparencyChange(Sender: TObject);
 begin
   if Assigned(FVideoWindow) then
-    FVideoWindow.TextPanel.Transparecy := trckbrTransparency.Position;
+    FVideoWindow.TextPanel.Transparency := trckbrTransparency.Position;
 end;
 
 procedure TfrmMainForm.trckbrBrightnessChange(Sender: TObject);
