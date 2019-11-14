@@ -153,7 +153,7 @@ type
     property HeightRelative: Integer read FHeightRelative
       write SetHeightRelative;
     property Used: Boolean read FUsed write SetUsed;
-    property Transparecy: Byte read FTransparency write SetTransparency;
+    property Transparency: Byte read FTransparency write SetTransparency;
     property ColorScheme: TColorScheme read FColorScheme write SetColorScheme;
     property Brightness: Integer read FBrightness write SetBrightness;
     property TransparentBg: Boolean read FTransparentBg
@@ -162,7 +162,29 @@ type
     property FontSize: Integer read GetFontSize write SetFontSize;
   end;
 
+procedure CheckColorShceme(AValue: Integer);
+procedure CheckTextPanelPosition(AValue: Integer);
+
+resourcestring
+  RsErrColorSchemeOutOfRange = 'Цветовая схема вне диапазона';
+  RsErrPanelPositionOutOfRange = 'Позиция панели вне диапазона';
+
 implementation
+
+procedure CheckColorShceme(AValue: Integer);
+begin
+  if not(AValue in [Ord(Low(TColorScheme)) .. Ord(High(TColorScheme))]) then
+    raise Exception.Create(RsErrColorSchemeOutOfRange);
+end;
+
+procedure CheckTextPanelPosition(AValue: Integer);
+begin
+  if not(AValue in [Ord(Low(TWindowPosition)) .. Ord(High(TWindowPosition))])
+  then
+    raise Exception.Create(RsErrPanelPositionOutOfRange);
+end;
+
+
 
 function AdjustColor(AColor: TColor; APercent: ShortInt): TColor;
 
@@ -257,7 +279,7 @@ begin
   Canvas.Font := FParentControl.Font;
 
   Position := DefPosition;
-  Transparecy := DefTransparency;
+  Transparency := DefTransparency;
   Brightness := DefBrightness;
   ColorScheme := DefColorScheme;
   TransparentBg := DefTransparentBg;
@@ -481,7 +503,7 @@ end;
 
 procedure TAlphaWindow.PopupSetTransparency(Sender: TObject);
 begin
-  Transparecy := TMenuItem(Sender).Tag;
+  Transparency := TMenuItem(Sender).Tag;
 end;
 
 procedure TAlphaWindow.PopupSetBrigtness(Sender: TObject);

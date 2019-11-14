@@ -13,6 +13,8 @@ type
 
   TVideoPanel = class(TSelfParentControl)
   public
+    class var Obj: TVideoPanel;
+  public
   class var
     DefFontSize: Integer;
     DefFontName: string;
@@ -24,8 +26,6 @@ type
     DEF_FONTNAME = 'Courier New';
     DEF_FONTSIZE = 12;
     DEF_FONTCOLOR = clBlack;
-  private
-    class var FObject: TVideoPanel;
   private
     FUserID: Integer;
     FPanelMode: TPanelMode;
@@ -61,6 +61,7 @@ type
     constructor Create(AParent: HWND; APanelMode: TPanelMode); overload;
     destructor Destroy; override;
   public
+    class procedure CheckWindowIndex(AValue: Integer);
     procedure EnableAll(AEnabled: Boolean);
     procedure PlayAll(APlay: Boolean);
     procedure ShowOverlayTextAll(AShow: Boolean);
@@ -82,6 +83,8 @@ uses System.Types;
 
 resourcestring
   RsErrSingletoneOnly = 'Only one TVideoPanel object is allowed';
+  RsErrWinIndexOutOfRange = 'Номер окна вне диапазона';
+
 
 function CallWndRetProc(nCode: Integer; wParam: wParam; lParam: lParam)
   : LRESULT; stdcall;
@@ -89,25 +92,25 @@ var
   LMessage: UINT;
   LHwnd: HWND;
 begin
-  Result := CallNextHookEx(TVideoPanel.FObject.FParentWndHook, nCode,
+  Result := CallNextHookEx(TVideoPanel.Obj.FParentWndHook, nCode,
     wParam, lParam);
   if (nCode < 0) then
     Exit;
 
   if nCode = HC_ACTION then
   begin
-    if not Assigned(TVideoPanel.FObject) then
+    if not Assigned(TVideoPanel.Obj) then
       Exit;
     LHwnd := tagCWPRETSTRUCT(pointer(lParam)^).HWND;
-    if LHwnd <> TVideoPanel.FObject.ParentWindow then
+    if LHwnd <> TVideoPanel.Obj.ParentWindow then
       Exit;
 
     LMessage := tagCWPRETSTRUCT(pointer(lParam)^).Message;
     case LMessage of
       WM_SIZE:
-        SendMessage(TVideoPanel.FObject.Handle, WM_SIZE, 0, 0);
+        SendMessage(TVideoPanel.Obj.Handle, WM_SIZE, 0, 0);
       WM_DESTROY:
-        TVideoPanel.FObject.DoLoseParentWindow;
+        TVideoPanel.Obj.DoLoseParentWindow;
     end;
   end;
 end;
@@ -146,9 +149,9 @@ var
 begin
   inherited Create(AParent);
 
-  if Assigned(FObject) then
+  if Assigned(Obj) then
     raise Exception.Create(RsErrSingletoneOnly);
-  FObject := Self;
+  Obj := Self;
 
   DoubleBuffered := True;
 
@@ -172,6 +175,12 @@ begin
   InstallHookParent;
 end;
 
+class procedure TVideoPanel.CheckWindowIndex(AValue: Integer);
+begin
+  if not(AValue in [0 .. TVideoPanel.WIN_COUNT - 1]) then
+    raise Exception.Create(RsErrWinIndexOutOfRange);
+end;
+
 constructor TVideoPanel.Create(AParent: HWND; APanelMode: TPanelMode);
 begin
   Create(AParent);
@@ -189,7 +198,7 @@ destructor TVideoPanel.Destroy;
 begin
   UninstallHookParent;
   FreeAndNil(FVideoWindows);
-  FObject := nil;
+  Obj := nil;
   inherited;
 end;
 
