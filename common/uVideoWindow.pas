@@ -10,6 +10,7 @@ const
   WM_PLAYVIDEO = WM_USER + 0;
   WM_STOPVIDEO = WM_USER + 1;
   WM_CHANGESELECTED = WM_USER + 2;
+  WM_MAXIMIZEWND = WM_USER + 3;
 
 type
   TSelfParentControl = class(TCustomControl)
@@ -78,6 +79,7 @@ type
       X, Y: Integer); override;
     procedure Paint; override;
     procedure Resize; override;
+    procedure DblClick; override;
   public
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
@@ -173,6 +175,12 @@ procedure TVideoWindow.CreateTextPanel;
 begin
   FreeAndNil(FTextPanel);
   FTextPanel := TAlphaWindow.Create(Self);
+end;
+
+procedure TVideoWindow.DblClick;
+begin
+  SendMessage(Parent.Handle, WM_MAXIMIZEWND, Handle, 0);
+  inherited;
 end;
 
 destructor TVideoWindow.Destroy;

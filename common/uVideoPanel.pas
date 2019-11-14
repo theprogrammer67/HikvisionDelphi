@@ -3,7 +3,7 @@
 interface
 
 uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
-  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes,
+  System.SysUtils, Vcl.Graphics, Winapi.Messages, System.Classes, System.Math,
   uHikvisionErrors;
 
 type
@@ -33,6 +33,7 @@ type
     FVideoWindows: TObjectList<TVideoWindow>;
     FOnLoseParentWindow: TNotifyEvent;
     FOnSelectWindow: TSelectWindow;
+    FMaximizedWindow: TVideoWindow;
   private
     procedure SetPanelMode(const Value: TPanelMode);
     procedure InstallHookParent;
@@ -42,7 +43,9 @@ type
     procedure DoLoseParentWindow;
     procedure SetUserID(const Value: Integer);
     procedure SelectWindow(AHWnd: HWND);
-    procedure SelectItem(AIndex: Integer); overload;
+    procedure MaximizeWindow(AHWnd: HWND);
+    procedure SelectItem(AIndex: Integer);
+    procedure MaximizeItem(AIndex: Integer);
     procedure DoSelectWindow(AIndex: Integer);
     procedure PaintBorders;
     function GetItemIndex: Integer;
@@ -51,8 +54,9 @@ type
   protected
     procedure WMLButtonDown(var Message: TWMLButtonDown);
       message WM_LBUTTONDOWN;
-    procedure WMLChangeSelected(var Message: TMessage);
+    procedure WMChangeSelected(var Message: TMessage);
       message WM_CHANGESELECTED;
+    procedure WMMaximizeWindow(var Message: TMessage); message WM_MAXIMIZEWND;
     procedure Paint; override;
     procedure Resize; override;
   public
@@ -84,7 +88,6 @@ uses System.Types;
 resourcestring
   RsErrSingletoneOnly = 'Only one TVideoPanel object is allowed';
   RsErrWinIndexOutOfRange = 'Номер окна вне диапазона';
-
 
 function CallWndRetProc(nCode: Integer; wParam: wParam; lParam: lParam)
   : LRESULT; stdcall;
@@ -253,6 +256,30 @@ begin
     FParentWndHook := 0;
 end;
 
+procedure TVideoPanel.MaximizeItem(AIndex: Integer);
+begin
+  if FPanelMode = pmSingle then
+    Exit;
+
+  if Assigned(FMaximizedWindow) then
+    FMaximizedWindow := nil
+  else
+    FMaximizedWindow := VideoWindows[AIndex];
+  RecalcVideoWindows;
+end;
+
+procedure TVideoPanel.MaximizeWindow(AHWnd: HWND);
+var
+  I: Integer;
+begin
+  for I := 0 to FVideoWindows.Count - 1 do
+    if FVideoWindows[I].Handle = AHWnd then
+    begin
+      MaximizeItem(I);
+      Break;
+    end;
+end;
+
 procedure TVideoPanel.Paint;
 begin
   inherited;
@@ -302,13 +329,16 @@ var
   FVideoWindow: TVideoWindow;
   LRatio: Byte;
   LCount, LHeight, LWidth, I, XNum, YNum: Integer;
+  LMaxMode: Boolean;
 begin
   if not Assigned(FVideoWindows) then
     Exit;
 
   Visible := False;
   try
-    LRatio := Ord(FPanelMode) + 1;
+    LMaxMode := Assigned(FMaximizedWindow);
+
+    LRatio := IfThen(LMaxMode, 1, Ord(FPanelMode) + 1);
     LWidth := (Width - MARGIN) div LRatio;
     LHeight := (Height - MARGIN) div LRatio;
     LCount := LRatio * LRatio;
@@ -316,15 +346,16 @@ begin
     for I := 0 to FVideoWindows.Count - 1 do
     begin
       FVideoWindow := FVideoWindows[I];
-      FVideoWindow.Visible := I < LCount;
+
+      FVideoWindow.Visible := (FVideoWindow = FMaximizedWindow) or (I < LCount);
       if not FVideoWindow.Visible then
         Continue;
 
       FVideoWindow.Height := LHeight - MARGIN;
       FVideoWindow.Width := LWidth - MARGIN;
 
-      XNum := ((I + LRatio) mod LRatio);
-      YNum := I div LRatio;
+      XNum := IfThen(LMaxMode, 0, (I + LRatio) mod LRatio);
+      YNum := IfThen(LMaxMode, 0, I div LRatio);
 
       FVideoWindow.Left := XNum * LWidth + MARGIN;
       FVideoWindow.Top := YNum * LHeight + MARGIN;
@@ -369,7 +400,10 @@ var
 begin
   for I := 0 to FVideoWindows.Count - 1 do
     if FVideoWindows[I].Handle = AHWnd then
+    begin
       SelectItem(I);
+      Break;
+    end;
 end;
 
 procedure TVideoPanel.SetItemIndex(const Value: Integer);
@@ -379,7 +413,11 @@ end;
 
 procedure TVideoPanel.SetPanelMode(const Value: TPanelMode);
 begin
+  if FPanelMode = Value then
+    Exit;
+
   FPanelMode := Value;
+  FMaximizedWindow := nil;
   RecalcVideoWindows;
 end;
 
@@ -420,9 +458,14 @@ begin
     SelectWindow(LHwnd);
 end;
 
-procedure TVideoPanel.WMLChangeSelected(var Message: TMessage);
+procedure TVideoPanel.WMChangeSelected(var Message: TMessage);
 begin
   SelectWindow(Message.wParam);
+end;
+
+procedure TVideoPanel.WMMaximizeWindow(var Message: TMessage);
+begin
+  MaximizeWindow(Message.wParam);
 end;
 
 end.
