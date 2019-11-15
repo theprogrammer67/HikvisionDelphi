@@ -29,12 +29,35 @@ type
     procedure Show;
   end;
 
+  TPopupMenuEx = class(TPopupMenu)
+  private type
+    TItemFunc = reference to function(I: Integer): Integer;
+  public
+    constructor Create(AOwner: TComponent); reintroduce; virtual;
+  public
+    function AddItem(const ACaption: string; AOnClick: TNotifyEvent): TMenuItem;
+    procedure AddSubItems(AItem: TMenuItem; ALow, AHigh: Integer;
+      const APrefix, APostfix: string; AItemF: TItemFunc;
+      AOnClick: TNotifyEvent);
+    procedure UpdateItems(Sender: TObject); virtual; abstract;
+  end;
+
   TVideoWindow = class(TSelfParentControl)
   private type
-    TMenuItems = record
+    TMenuVideoWindow = class(TPopupMenuEx)
+    private
+      FVideoWindow: TVideoWindow;
+    public
+      constructor Create(AOwner: TComponent); override;
+    public
       Channel: TMenuItem;
       PrintOverlayText: TMenuItem;
-      PalyStop: TMenuItem;
+      PlayStop: TMenuItem;
+    public
+      procedure UpdateItems(Sender: TObject); override;
+      procedure OnClickChannel(Sender: TObject);
+      procedure OnClickPlayStop(Sender: TObject);
+      procedure OnClickShowTextPanel(Sender: TObject);
     end;
   public const
     STATUS_FONTSIZE = 12;
@@ -54,18 +77,12 @@ type
     FRealHandle: Integer;
     FLastErrorDecription: string;
     FTextPanel: TAlphaWindow;
-    FMenu: TPopupMenu;
-    FMenuItems: TMenuItems;
+    FMenu: TMenuVideoWindow;
   private // Обработка сообщений
     procedure WMPlayVideo(var Message: TMessage); message WM_PLAYVIDEO;
     procedure WMStopVideo(var Message: TMessage); message WM_STOPVIDEO;
   private // Меню
     procedure CreatePopupMenu;
-    procedure OnPopup(Sender: TObject);
-    procedure PopupSetChannel(Sender: TObject);
-    procedure PopupPlayStop(Sender: TObject);
-    procedure PopupSetPrintOverlayText(Sender: TObject);
-    procedure UpdatePopupItems;
   private
     procedure ClearError;
     function GetIsPlaying: Boolean;
@@ -90,10 +107,10 @@ type
     property Used: Boolean read FUsed write SetUsed;
     property Selected: Boolean read FSelected write FSelected;
     property Channel: Integer read FChannel write SetChannel;
-//    property OverlayText: string read GetOverlayText write SetOverlayText;
+    // property OverlayText: string read GetOverlayText write SetOverlayText;
     property IsPlaying: Boolean read GetIsPlaying;
-//    property ShowOverlayText: Boolean read GetShowOverlayText
-//      write SetShowOverlayText;
+    // property ShowOverlayText: Boolean read GetShowOverlayText
+    // write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
     property TextPanel: TAlphaWindow read FTextPanel write FTextPanel;
     property Font;
@@ -107,7 +124,7 @@ resourcestring
   RsPlay = 'Play';
   RsStop = 'Stop';
 
-{ TWideoWindow }
+  { TWideoWindow }
 
 procedure TVideoWindow.ClearError;
 begin
@@ -138,36 +155,8 @@ begin
 end;
 
 procedure TVideoWindow.CreatePopupMenu;
-var
-  LSubItem: TMenuItem;
-  I: Integer;
 begin
-  FMenu := TPopupMenu.Create(Self);
-  FMenu.AutoHotkeys := maManual;
-  FMenu.OnPopup := OnPopup;
-
-  FMenuItems.Channel := TMenuItem.Create(FMenu);
-  FMenuItems.Channel.Caption := 'Set channel';
-  FMenu.Items.Add(FMenuItems.Channel);
-
-  for I := 1 to 16 do
-  begin
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := 'Channel ' + IntToStr(I);
-    LSubItem.Tag := I;
-    LSubItem.OnClick := PopupSetChannel;
-    FMenuItems.Channel.Add(LSubItem);
-  end;
-
-  FMenuItems.PalyStop := TMenuItem.Create(FMenu);
-  FMenuItems.PalyStop.OnClick := PopupPlayStop;
-  FMenu.Items.Add(FMenuItems.PalyStop);
-
-  FMenuItems.PrintOverlayText := TMenuItem.Create(FMenu);
-  FMenuItems.PrintOverlayText.Caption := 'Print overlay text';
-  FMenuItems.PrintOverlayText.OnClick := PopupSetPrintOverlayText;
-  FMenu.Items.Add(FMenuItems.PrintOverlayText);
-
+  FMenu := TMenuVideoWindow.Create(Self);
   PopupMenu := FMenu;
 end;
 
@@ -216,11 +205,6 @@ begin
   end;
 end;
 
-procedure TVideoWindow.OnPopup(Sender: TObject);
-begin
-  UpdatePopupItems;
-end;
-
 procedure TVideoWindow.WMStopVideo(var Message: TMessage);
 begin
   try
@@ -259,29 +243,12 @@ begin
   FRealHandle := NET_DVR_RealPlay_V40(UserID, LPreviewInfo, nil, 0);
   if FRealHandle < 0 then
     RaiseLastHVError;
-//  if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
-//    RaiseLastHVError;
+  // if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
+  // RaiseLastHVError;
 
   FTextPanel.Enabled := True;
 end;
 
-procedure TVideoWindow.PopupPlayStop(Sender: TObject);
-begin
-  if IsPlaying then
-    StopLiveVideo
-  else
-    PlayLiveVideo;
-end;
-
-procedure TVideoWindow.PopupSetChannel(Sender: TObject);
-begin
-  Channel := TMenuItem(Sender).Tag;
-end;
-
-procedure TVideoWindow.PopupSetPrintOverlayText(Sender: TObject);
-begin
-  TextPanel.Used := not TextPanel.Used;
-end;
 
 procedure TVideoWindow.PrintErrorDescription;
 var
@@ -358,22 +325,6 @@ begin
   Invalidate;
 end;
 
-procedure TVideoWindow.UpdatePopupItems;
-var
-  I: Integer;
-begin
-  for I := 1 to FMenuItems.Channel.Count do
-    FMenuItems.Channel.Items[I - 1].Checked :=
-      FChannel = FMenuItems.Channel.Items[I - 1].Tag;
-
-  if IsPlaying then
-    FMenuItems.PalyStop.Caption := RsStop
-  else
-    FMenuItems.PalyStop.Caption := RsPlay;
-
-  FMenuItems.PrintOverlayText.Checked := TextPanel.Used;
-end;
-
 { TSelfParentControl }
 
 constructor TSelfParentControl.Create(AParent: HWND);
@@ -433,6 +384,93 @@ begin
     FParentForm.Visible := True;
 
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
+end;
+
+{ TPopupMenuEx }
+
+function TPopupMenuEx.AddItem(const ACaption: string; AOnClick: TNotifyEvent)
+  : TMenuItem;
+begin
+  Result := TMenuItem.Create(Self);
+  Result.Caption := ACaption;
+  Result.OnClick := AOnClick;
+  Items.Add(Result);
+end;
+
+procedure TPopupMenuEx.AddSubItems(AItem: TMenuItem; ALow, AHigh: Integer;
+  const APrefix, APostfix: string; AItemF: TItemFunc; AOnClick: TNotifyEvent);
+var
+  LSubItem: TMenuItem;
+  I: Integer;
+begin
+  for I := ALow to AHigh do
+  begin
+    LSubItem := TMenuItem.Create(AItem);
+    LSubItem.Caption := APrefix + IntToStr(I) + APostfix;
+    LSubItem.Tag := AItemF(I);
+    LSubItem.OnClick := AOnClick;
+    AItem.Add(LSubItem);
+  end;
+end;
+
+constructor TPopupMenuEx.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  AutoHotkeys := maManual;
+  OnPopup := UpdateItems;
+end;
+
+{ TVideoWindow.TMenuVideoWindow }
+
+constructor TVideoWindow.TMenuVideoWindow.Create(AOwner: TComponent);
+begin
+  inherited;
+  FVideoWindow := TVideoWindow(AOwner);
+
+  Channel := AddItem('Channel', nil);
+  AddSubItems(Channel, 1, 16, '', '',
+    function(I: Integer): Integer
+    begin
+      Result := I;
+    end, OnClickChannel);
+
+  PlayStop := AddItem('', OnClickPlayStop);
+  PrintOverlayText := AddItem('Show text panel', OnClickShowTextPanel);
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.UpdateItems(Sender: TObject);
+var
+  I: Integer;
+begin
+  for I := 1 to Channel.Count do
+    Channel.Items[I - 1].Checked := FVideoWindow.FChannel = Channel.
+      Items[I - 1].Tag;
+
+  if FVideoWindow.IsPlaying then
+    PlayStop.Caption := RsStop
+  else
+    PlayStop.Caption := RsPlay;
+
+  PrintOverlayText.Checked := FVideoWindow.TextPanel.Used;
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.OnClickPlayStop(Sender: TObject);
+begin
+  if FVideoWindow.IsPlaying then
+    FVideoWindow.StopLiveVideo
+  else
+    FVideoWindow.PlayLiveVideo;
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.OnClickChannel(Sender: TObject);
+begin
+  FVideoWindow.Channel := TMenuItem(Sender).Tag;
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.OnClickShowTextPanel
+  (Sender: TObject);
+begin
+  FVideoWindow.TextPanel.Used := not FVideoWindow.TextPanel.Used;
 end;
 
 end.
