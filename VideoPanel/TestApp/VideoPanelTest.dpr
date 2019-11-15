@@ -7,7 +7,8 @@ uses
   uVideoWindow in '..\..\common\uVideoWindow.pas',
   uVideoPanel in '..\..\common\uVideoPanel.pas',
   uHikvisionErrors in '..\..\common\uHikvisionErrors.pas',
-  uAlphaWindow in '..\..\common\uAlphaWindow.pas';
+  uAlphaWindow in '..\..\common\uAlphaWindow.pas',
+  uCommonTypes in '..\..\common\uCommonTypes.pas';
 
 {$R *.res}
 
