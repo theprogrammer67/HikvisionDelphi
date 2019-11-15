@@ -60,9 +60,11 @@ type
     FChannel: Integer;
     FUserID: Integer;
     FRealHandle: Integer;
+    FPlayHandle: Integer;
     FLastErrorDecription: string;
     FTextPanel: TAlphaWindow;
-     FMenu: TMenuVideoWindow;
+    FMenu: TMenuVideoWindow;
+    FCaptureDir: string;
   private // Обработка сообщений
     procedure WMPlayVideo(var Message: TMessage); message WM_PLAYVIDEO;
     procedure WMStopVideo(var Message: TMessage); message WM_STOPVIDEO;
@@ -85,6 +87,7 @@ type
   public
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
+    procedure CapturePicture;
   public // Конструкторы/Деструкторы
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
@@ -98,6 +101,7 @@ type
     // write SetShowOverlayText;
     property UserID: Integer read FUserID write FUserID;
     property TextPanel: TAlphaWindow read FTextPanel write FTextPanel;
+    property CaptureDir: string read FCaptureDir write FCaptureDir;
     property Font;
   end;
 
@@ -111,6 +115,7 @@ uses System.Types;
 resourcestring
   RsPlay = 'Play';
   RsStop = 'Stop';
+  RsErrCaptureDirectory = 'Capture directory is not specified';
 
   { TWideoWindow }
 
@@ -125,6 +130,7 @@ begin
 
   FUserID := -1;
   FRealHandle := -1;
+  FPlayHandle := -1;
   Color := DEF_COLOR;
   Used := True;
   FChannel := 1;
@@ -144,8 +150,8 @@ end;
 
 procedure TVideoWindow.CreatePopupMenu;
 begin
-   FMenu := TMenuVideoWindow.Create(Self);
-   PopupMenu := FMenu;
+  FMenu := TMenuVideoWindow.Create(Self);
+  PopupMenu := FMenu;
 end;
 
 procedure TVideoWindow.CreateTextPanel;
@@ -163,7 +169,7 @@ end;
 destructor TVideoWindow.Destroy;
 begin
   StopLiveVideo;
-   FreeAndNil(FMenu);
+  FreeAndNil(FMenu);
   FreeAndNil(FTextPanel);
   inherited;
   FreeAndNil(FParentForm);
@@ -233,6 +239,9 @@ begin
     RaiseLastHVError;
   // if not NET_DVR_RigisterDrawFun(FRealHandle, DrawFun, FId) then
   // RaiseLastHVError;
+  // FPlayHandle :=  NET_DVR_GetPlayBackPlayerIndex(FRealHandle);
+  // if FPlayHandle < 0 then
+  // RaiseLastHVError;
 
   FTextPanel.Enabled := True;
 end;
@@ -286,6 +295,22 @@ begin
     FTextPanel.CalculateSize;
 end;
 
+procedure TVideoWindow.CapturePicture;
+var
+  LFileName: string;
+begin
+  if FCaptureDir = '' then
+    raise Exception.Create(RsErrCaptureDirectory);
+
+  LFileName := Format('%s%s_%s.jpg', [IncludeTrailingPathDelimiter(FCaptureDir),
+    'Picture', FormatDateTime('yyyy.mm.dd_hh.mm.ss', Now)]) + #0;
+  if not NET_DVR_SetCapturePictureMode(1) then
+    RaiseLastHVError;
+  if not NET_DVR_CapturePicture(FRealHandle, PAnsiChar(AnsiString(LFileName)))
+  then
+    RaiseLastHVError;
+end;
+
 procedure TVideoWindow.SetChannel(const Value: Integer);
 begin
   FChannel := Value;
@@ -309,6 +334,7 @@ begin
   if FRealHandle >= 0 then
     NET_DVR_StopRealPlay(FRealHandle);
   FRealHandle := -1;
+  FPlayHandle := -1;
   Invalidate;
 end;
 

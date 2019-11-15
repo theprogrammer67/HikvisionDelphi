@@ -69,6 +69,12 @@ type
   TNET_DVR_StopRealPlay = function(iRealHandle: Longint): Bool; stdcall;
   TNET_DVR_RigisterDrawFun = function(lRealHandle: Longint; fDrawFun: DRAWFUN;
     dwUser: UINT): Bool; stdcall;
+  TNET_DVR_GetPlayBackPlayerIndex = function(lRealHandle: Longint)
+    : Integer; stdcall;
+  TNET_DVR_SetCapturePictureMode = function(dwCaptureMode: DWORD)
+    : Bool; stdcall;
+  TNET_DVR_CapturePicture = function(lRealHandle: Longint;
+    sPicFileName: PAnsiChar): Bool; stdcall;
 
 {$IFDEF LoadLibStatic}
 function NET_DVR_Login_V30(sDVRIP: PAnsiChar; wDVRPort: Int32;
@@ -88,7 +94,14 @@ function NET_DVR_StopRealPlay(iRealHandle: Longint): Bool; stdcall;
   external DLL_NAME;
 function NET_DVR_RigisterDrawFun(lRealHandle: Longint; fDrawFun: DRAWFUN;
   dwUser: UINT): Bool; stdcall; external DLL_NAME;
+function NET_DVR_GetPlayBackPlayerIndex(iRealHandle: Longint): Bool; stdcall;
+  external DLL_NAME;
+function NET_DVR_SetCapturePictureMode(dwCaptureMode: DWORD): Bool; stdcall;
+  external DLL_NAME;
+function NET_DVR_CapturePicture(lRealHandle: Longint; sPicFileName: PAnsiChar)
+  : Bool; stdcall; external DLL_NAME;
 {$ELSE}
+
 var
   NET_DVR_Login_V30: TNET_DVR_Login_V30;
   NET_DVR_Logout: TNET_DVR_Logout;
@@ -99,6 +112,9 @@ var
   NET_DVR_RealPlay_V40: TNET_DVR_RealPlay_V40;
   NET_DVR_StopRealPlay: TNET_DVR_StopRealPlay;
   NET_DVR_RigisterDrawFun: TNET_DVR_RigisterDrawFun;
+  NET_DVR_GetPlayBackPlayerIndex: TNET_DVR_GetPlayBackPlayerIndex;
+  NET_DVR_SetCapturePictureMode: TNET_DVR_SetCapturePictureMode;
+  NET_DVR_CapturePicture: TNET_DVR_CapturePicture;
 
 procedure LoadLib(out ALibHandle: THandle; const LibDirectory: string);
 procedure FreeLib(var ALibHandle: THandle);
@@ -107,6 +123,7 @@ procedure FreeLib(var ALibHandle: THandle);
 implementation
 
 {$IFNDEF LoadLibStatic}
+
 procedure FreeLib(var ALibHandle: THandle);
 begin
   if ALibHandle = 0 then
@@ -142,6 +159,11 @@ begin
       @NET_DVR_RealPlay_V40 := GetModuleSymbol('NET_DVR_RealPlay_V40');
       @NET_DVR_StopRealPlay := GetModuleSymbol('NET_DVR_StopRealPlay');
       @NET_DVR_RigisterDrawFun := GetModuleSymbol('NET_DVR_RigisterDrawFun');
+      @NET_DVR_GetPlayBackPlayerIndex :=
+        GetModuleSymbol('NET_DVR_GetPlayBackPlayerIndex');
+      @NET_DVR_SetCapturePictureMode :=
+        GetModuleSymbol('NET_DVR_SetCapturePictureMode');
+      @NET_DVR_CapturePicture := GetModuleSymbol('NET_DVR_CapturePicture');
     except
       FreeLib(ALibHandle);
       raise;
