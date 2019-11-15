@@ -4,7 +4,7 @@ interface
 
 uses uCHCNetSDK, Vcl.Controls, Winapi.Windows, uHikvisionErrors, System.Classes,
   Vcl.Graphics, System.SysUtils, System.Generics.Collections, Vcl.Menus,
-  Vcl.Forms, Winapi.Messages, System.Math, uAlphaWindow;
+  Vcl.Forms, Winapi.Messages, System.Math, uAlphaWindow, uCommonTypes;
 
 const
   WM_PLAYVIDEO = WM_USER + 0;
@@ -29,29 +29,14 @@ type
     procedure Show;
   end;
 
-  TPopupMenuEx = class(TPopupMenu)
-  private type
-    TItemFunc = reference to function(I: Integer): Integer;
-  public
-    constructor Create(AOwner: TComponent); reintroduce; virtual;
-  public
-    function AddItem(const ACaption: string; AOnClick: TNotifyEvent): TMenuItem;
-    procedure AddSubItems(AItem: TMenuItem; ALow, AHigh: Integer;
-      const APrefix, APostfix: string; AItemF: TItemFunc;
-      AOnClick: TNotifyEvent);
-    procedure UpdateItems(Sender: TObject); virtual; abstract;
-  end;
-
   TVideoWindow = class(TSelfParentControl)
   private type
-    TMenuVideoWindow = class(TPopupMenuEx)
-    private
-      FVideoWindow: TVideoWindow;
+    TMenuVideoWindow = class(TPopupMenuEx<TVideoWindow>)
     public
-      constructor Create(AOwner: TComponent); override;
+      constructor Create(AOwner: TVideoWindow); override;
     public
       Channel: TMenuItem;
-      PrintOverlayText: TMenuItem;
+      ShowTextPanel: TMenuItem;
       PlayStop: TMenuItem;
     public
       procedure UpdateItems(Sender: TObject); override;
@@ -77,7 +62,7 @@ type
     FRealHandle: Integer;
     FLastErrorDecription: string;
     FTextPanel: TAlphaWindow;
-    FMenu: TMenuVideoWindow;
+     FMenu: TMenuVideoWindow;
   private // Обработка сообщений
     procedure WMPlayVideo(var Message: TMessage); message WM_PLAYVIDEO;
     procedure WMStopVideo(var Message: TMessage); message WM_STOPVIDEO;
@@ -114,6 +99,9 @@ type
     property UserID: Integer read FUserID write FUserID;
     property TextPanel: TAlphaWindow read FTextPanel write FTextPanel;
     property Font;
+  end;
+
+  TMenuVideoWindow = class(TPopupMenuEx<TVideoWindow>)
   end;
 
 implementation
@@ -156,8 +144,8 @@ end;
 
 procedure TVideoWindow.CreatePopupMenu;
 begin
-  FMenu := TMenuVideoWindow.Create(Self);
-  PopupMenu := FMenu;
+   FMenu := TMenuVideoWindow.Create(Self);
+   PopupMenu := FMenu;
 end;
 
 procedure TVideoWindow.CreateTextPanel;
@@ -175,7 +163,7 @@ end;
 destructor TVideoWindow.Destroy;
 begin
   StopLiveVideo;
-  FreeAndNil(FMenu);
+   FreeAndNil(FMenu);
   FreeAndNil(FTextPanel);
   inherited;
   FreeAndNil(FParentForm);
@@ -248,7 +236,6 @@ begin
 
   FTextPanel.Enabled := True;
 end;
-
 
 procedure TVideoWindow.PrintErrorDescription;
 var
@@ -386,91 +373,56 @@ begin
   Winapi.Windows.ShowWindow(Self.Handle, SW_MAXIMIZE);
 end;
 
-{ TPopupMenuEx }
-
-function TPopupMenuEx.AddItem(const ACaption: string; AOnClick: TNotifyEvent)
-  : TMenuItem;
-begin
-  Result := TMenuItem.Create(Self);
-  Result.Caption := ACaption;
-  Result.OnClick := AOnClick;
-  Items.Add(Result);
-end;
-
-procedure TPopupMenuEx.AddSubItems(AItem: TMenuItem; ALow, AHigh: Integer;
-  const APrefix, APostfix: string; AItemF: TItemFunc; AOnClick: TNotifyEvent);
-var
-  LSubItem: TMenuItem;
-  I: Integer;
-begin
-  for I := ALow to AHigh do
-  begin
-    LSubItem := TMenuItem.Create(AItem);
-    LSubItem.Caption := APrefix + IntToStr(I) + APostfix;
-    LSubItem.Tag := AItemF(I);
-    LSubItem.OnClick := AOnClick;
-    AItem.Add(LSubItem);
-  end;
-end;
-
-constructor TPopupMenuEx.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  AutoHotkeys := maManual;
-  OnPopup := UpdateItems;
-end;
-
 { TVideoWindow.TMenuVideoWindow }
 
-constructor TVideoWindow.TMenuVideoWindow.Create(AOwner: TComponent);
+constructor TVideoWindow.TMenuVideoWindow.Create(AOwner: TVideoWindow);
 begin
-  inherited;
-  FVideoWindow := TVideoWindow(AOwner);
+  inherited Create(AOwner);
 
   Channel := AddItem('Channel', nil);
-  AddSubItems(Channel, 1, 16, '', '',
-    function(I: Integer): Integer
+  AddSubItems(Channel, 1, 16,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
     begin
-      Result := I;
+      AValue := I;
+      ACaption := IntToStr(I);
     end, OnClickChannel);
 
   PlayStop := AddItem('', OnClickPlayStop);
-  PrintOverlayText := AddItem('Show text panel', OnClickShowTextPanel);
+  ShowTextPanel := AddItem('Show text panel', OnClickShowTextPanel);
 end;
 
+//
 procedure TVideoWindow.TMenuVideoWindow.UpdateItems(Sender: TObject);
 var
   I: Integer;
 begin
   for I := 1 to Channel.Count do
-    Channel.Items[I - 1].Checked := FVideoWindow.FChannel = Channel.
-      Items[I - 1].Tag;
+    Channel.Items[I - 1].Checked := FObj.FChannel = Channel.Items[I - 1].Tag;
 
-  if FVideoWindow.IsPlaying then
+  if FObj.IsPlaying then
     PlayStop.Caption := RsStop
   else
     PlayStop.Caption := RsPlay;
 
-  PrintOverlayText.Checked := FVideoWindow.TextPanel.Used;
+  ShowTextPanel.Checked := FObj.TextPanel.Used;
 end;
 
 procedure TVideoWindow.TMenuVideoWindow.OnClickPlayStop(Sender: TObject);
 begin
-  if FVideoWindow.IsPlaying then
-    FVideoWindow.StopLiveVideo
+  if FObj.IsPlaying then
+    FObj.StopLiveVideo
   else
-    FVideoWindow.PlayLiveVideo;
+    FObj.PlayLiveVideo;
 end;
 
 procedure TVideoWindow.TMenuVideoWindow.OnClickChannel(Sender: TObject);
 begin
-  FVideoWindow.Channel := TMenuItem(Sender).Tag;
+  FObj.Channel := TMenuItem(Sender).Tag;
 end;
 
-procedure TVideoWindow.TMenuVideoWindow.OnClickShowTextPanel
-  (Sender: TObject);
+procedure TVideoWindow.TMenuVideoWindow.OnClickShowTextPanel(Sender: TObject);
 begin
-  FVideoWindow.TextPanel.Used := not FVideoWindow.TextPanel.Used;
+  FObj.TextPanel.Used := not FObj.TextPanel.Used;
 end;
 
 end.

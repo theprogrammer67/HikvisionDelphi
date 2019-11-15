@@ -4,7 +4,7 @@ interface
 
 uses Vcl.Controls, System.Classes, Winapi.Windows, Vcl.Graphics, System.Types,
   System.Math, System.Generics.Collections, Winapi.Messages, System.SysUtils,
-  Vcl.ExtCtrls, Vcl.Menus, System.UITypes;
+  Vcl.ExtCtrls, Vcl.Menus, System.UITypes, uCommonTypes;
 
 type
   TWindowPosition = (wpTopLeft, wpTopRight, wpBottomRight, wpBottomLeft);
@@ -40,7 +40,10 @@ type
       FontColor: TColor;
     end;
 
-    TMenuItems = record
+    TMenuAlphaWindow = class(TPopupMenuEx<TAlphaWindow>)
+    public
+      constructor Create(AOwner: TAlphaWindow); override;
+    public
       ColorScheme: TMenuItem;
       Brightness: TMenuItem;
       Transparency: TMenuItem;
@@ -50,6 +53,17 @@ type
       Height: TMenuItem;
       Margin: TMenuItem;
       FontSize: TMenuItem;
+    public
+      procedure UpdateItems(Sender: TObject); override;
+      procedure OnClickColorScheme(Sender: TObject);
+      procedure OnClickBrigtness(Sender: TObject);
+      procedure OnClickTransparency(Sender: TObject);
+      procedure OnClickTransparentBg(Sender: TObject);
+      procedure OnClickPosition(Sender: TObject);
+      procedure OnClickWidth(Sender: TObject);
+      procedure OnClickHeight(Sender: TObject);
+      procedure OnClickMargin(Sender: TObject);
+      procedure OnClickFontSize(Sender: TObject);
     end;
   private const
     TIMER_INTERVAL = 150;
@@ -80,13 +94,12 @@ type
     FHeightRelative: Integer;
     FTimer: TTimer;
     FParentPos: TPoint;
-    FMenu: TPopupMenu;
-    FMenuItems: TMenuItems;
     FColorScheme: TColorScheme;
     FTransparency: Byte;
     FBrightness: Integer;
     FTransparentBg: Boolean;
     FPosition: TWindowPosition;
+    FMenu: TMenuAlphaWindow;
   private
     class var FParentWndHook: HHOOK;
     class var FObjects: TThreadList<TAlphaWindow>;
@@ -105,17 +118,6 @@ type
       message WM_WINDOWPOSCHANGED;
   private // Меню
     procedure CreatePopupMenu;
-    procedure UpdatePopupItems;
-    procedure OnPopup(Sender: TObject);
-    procedure PopupSetColorScheme(Sender: TObject);
-    procedure PopupSetBrigtness(Sender: TObject);
-    procedure PopupSetTransparency(Sender: TObject);
-    procedure PopupSetTransparentBackground(Sender: TObject);
-    procedure PopupSetPosition(Sender: TObject);
-    procedure PopupSetWidth(Sender: TObject);
-    procedure PopupSetHeight(Sender: TObject);
-    procedure PopupSetMargin(Sender: TObject);
-    procedure PopupSetFontSize(Sender: TObject);
   private
     function GetAlphaBlend: Byte;
     procedure UpdateVisible;
@@ -183,8 +185,6 @@ begin
   then
     raise Exception.Create(RsErrPanelPositionOutOfRange);
 end;
-
-
 
 function AdjustColor(AColor: TColor; APercent: ShortInt): TColor;
 
@@ -315,124 +315,126 @@ begin
 end;
 
 procedure TAlphaWindow.CreatePopupMenu;
-var
-  LSubItem: TMenuItem;
-  LScheme: TColorScheme;
-  I, LValue: Integer;
-  LPosition: TWindowPosition;
+//var
+//  LSubItem: TMenuItem;
+//  LScheme: TColorScheme;
+//  I, LValue: Integer;
+//  LPosition: TWindowPosition;
 begin
-  FMenu := TPopupMenu.Create(Self);
-  FMenu.AutoHotkeys := maManual;
-  FMenu.OnPopup := OnPopup;
+  FMenu := TMenuAlphaWindow.Create(Self);
 
-  FMenuItems.ColorScheme := TMenuItem.Create(FMenu);
-  FMenuItems.ColorScheme.Caption := 'Color scheme';
-  FMenu.Items.Add(FMenuItems.ColorScheme);
-  for LScheme := Low(TColorScheme) to High(TColorScheme) do
-  begin
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := COLORSCHEME_PARAMS[LScheme].Name;
-    LSubItem.Tag := Ord(LScheme);
-    LSubItem.OnClick := PopupSetColorScheme;
-    FMenuItems.ColorScheme.Add(LSubItem);
-    if Ord(LScheme) = 3 then
-      FMenuItems.ColorScheme.NewBottomLine;
-  end;
-
-  FMenuItems.Brightness := TMenuItem.Create(FMenu);
-  FMenuItems.Brightness.Caption := 'Brightness';
-  FMenu.Items.Add(FMenuItems.Brightness);
-  for I := -4 to 4 do
-  begin
-    LValue := I * 25;
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(LValue) + '%';
-    LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetBrigtness;
-    FMenuItems.Brightness.Add(LSubItem);
-  end;
-
-  FMenuItems.Transparency := TMenuItem.Create(FMenu);
-  FMenuItems.Transparency.Caption := 'Transparency';
-  FMenu.Items.Add(FMenuItems.Transparency);
-  for I := 0 to 3 do
-  begin
-    LValue := I * 25;
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(LValue) + '%';
-    LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetTransparency;
-    FMenuItems.Transparency.Add(LSubItem);
-  end;
-
-  FMenuItems.TransparentBg := TMenuItem.Create(FMenu);
-  FMenuItems.TransparentBg.Caption := 'Transparent background';
-  FMenuItems.TransparentBg.OnClick := PopupSetTransparentBackground;
-  FMenu.Items.Add(FMenuItems.TransparentBg);
-
-  FMenuItems.Position := TMenuItem.Create(FMenu);
-  FMenuItems.Position.Caption := 'Position';
-  FMenu.Items.Add(FMenuItems.Position);
-  for LPosition := Low(TWindowPosition) to High(TWindowPosition) do
-  begin
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := WPOSITION_NAMES[LPosition];
-    LSubItem.Tag := Ord(LPosition);
-    LSubItem.OnClick := PopupSetPosition;
-    FMenuItems.Position.Add(LSubItem);
-  end;
-
-  FMenuItems.Width := TMenuItem.Create(FMenu);
-  FMenuItems.Width.Caption := 'Width';
-  FMenu.Items.Add(FMenuItems.Width);
-  for I := 1 to 4 do
-  begin
-    LValue := I * 25;
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(LValue) + '%';
-    LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetWidth;
-    FMenuItems.Width.Add(LSubItem);
-  end;
-
-  FMenuItems.Height := TMenuItem.Create(FMenu);
-  FMenuItems.Height.Caption := 'Height';
-  FMenu.Items.Add(FMenuItems.Height);
-  for I := 1 to 4 do
-  begin
-    LValue := I * 25;
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(LValue) + '%';
-    LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetHeight;
-    FMenuItems.Height.Add(LSubItem);
-  end;
-
-  FMenuItems.Margin := TMenuItem.Create(FMenu);
-  FMenuItems.Margin.Caption := 'Margin';
-  FMenu.Items.Add(FMenuItems.Margin);
-  for I := 0 to 3 do
-  begin
-    LValue := I * 5;
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(LValue) + ' px';
-    LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetMargin;
-    FMenuItems.Margin.Add(LSubItem);
-  end;
-
-  FMenuItems.FontSize := TMenuItem.Create(FMenu);
-  FMenuItems.FontSize.Caption := 'Font size';
-  FMenu.Items.Add(FMenuItems.FontSize);
-  for I := 0 to 6 do
-  begin
-    LValue := 12 + I * 2;
-    LSubItem := TMenuItem.Create(FMenu);
-    LSubItem.Caption := IntToStr(LValue) + ' pt';
-    LSubItem.Tag := LValue;
-    LSubItem.OnClick := PopupSetFontSize;
-    FMenuItems.FontSize.Add(LSubItem);
-  end;
+//  FMenu := TPopupMenu.Create(Self);
+//  FMenu.AutoHotkeys := maManual;
+//  FMenu.OnPopup := OnPopup;
+//
+//  FMenuItems.ColorScheme := TMenuItem.Create(FMenu);
+//  FMenuItems.ColorScheme.Caption := 'Color scheme';
+//  FMenu.Items.Add(FMenuItems.ColorScheme);
+//  for LScheme := Low(TColorScheme) to High(TColorScheme) do
+//  begin
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := COLORSCHEME_PARAMS[LScheme].Name;
+//    LSubItem.Tag := Ord(LScheme);
+//    LSubItem.OnClick := PopupSetColorScheme;
+//    FMenuItems.ColorScheme.Add(LSubItem);
+//    if Ord(LScheme) = 3 then
+//      FMenuItems.ColorScheme.NewBottomLine;
+//  end;
+//
+//  FMenuItems.Brightness := TMenuItem.Create(FMenu);
+//  FMenuItems.Brightness.Caption := 'Brightness';
+//  FMenu.Items.Add(FMenuItems.Brightness);
+//  for I := -4 to 4 do
+//  begin
+//    LValue := I * 25;
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := IntToStr(LValue) + '%';
+//    LSubItem.Tag := LValue;
+//    LSubItem.OnClick := PopupSetBrigtness;
+//    FMenuItems.Brightness.Add(LSubItem);
+//  end;
+//
+//  FMenuItems.Transparency := TMenuItem.Create(FMenu);
+//  FMenuItems.Transparency.Caption := 'Transparency';
+//  FMenu.Items.Add(FMenuItems.Transparency);
+//  for I := 0 to 3 do
+//  begin
+//    LValue := I * 25;
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := IntToStr(LValue) + '%';
+//    LSubItem.Tag := LValue;
+//    LSubItem.OnClick := PopupSetTransparency;
+//    FMenuItems.Transparency.Add(LSubItem);
+//  end;
+//
+//  FMenuItems.TransparentBg := TMenuItem.Create(FMenu);
+//  FMenuItems.TransparentBg.Caption := 'Transparent background';
+//  FMenuItems.TransparentBg.OnClick := PopupSetTransparentBackground;
+//  FMenu.Items.Add(FMenuItems.TransparentBg);
+//
+//  FMenuItems.Position := TMenuItem.Create(FMenu);
+//  FMenuItems.Position.Caption := 'Position';
+//  FMenu.Items.Add(FMenuItems.Position);
+//  for LPosition := Low(TWindowPosition) to High(TWindowPosition) do
+//  begin
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := WPOSITION_NAMES[LPosition];
+//    LSubItem.Tag := Ord(LPosition);
+//    LSubItem.OnClick := PopupSetPosition;
+//    FMenuItems.Position.Add(LSubItem);
+//  end;
+//
+//  FMenuItems.Width := TMenuItem.Create(FMenu);
+//  FMenuItems.Width.Caption := 'Width';
+//  FMenu.Items.Add(FMenuItems.Width);
+//  for I := 1 to 4 do
+//  begin
+//    LValue := I * 25;
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := IntToStr(LValue) + '%';
+//    LSubItem.Tag := LValue;
+//    LSubItem.OnClick := PopupSetWidth;
+//    FMenuItems.Width.Add(LSubItem);
+//  end;
+//
+//  FMenuItems.Height := TMenuItem.Create(FMenu);
+//  FMenuItems.Height.Caption := 'Height';
+//  FMenu.Items.Add(FMenuItems.Height);
+//  for I := 1 to 4 do
+//  begin
+//    LValue := I * 25;
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := IntToStr(LValue) + '%';
+//    LSubItem.Tag := LValue;
+//    LSubItem.OnClick := PopupSetHeight;
+//    FMenuItems.Height.Add(LSubItem);
+//  end;
+//
+//  FMenuItems.Margin := TMenuItem.Create(FMenu);
+//  FMenuItems.Margin.Caption := 'Margin';
+//  FMenu.Items.Add(FMenuItems.Margin);
+//  for I := 0 to 3 do
+//  begin
+//    LValue := I * 5;
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := IntToStr(LValue) + ' px';
+//    LSubItem.Tag := LValue;
+//    LSubItem.OnClick := PopupSetMargin;
+//    FMenuItems.Margin.Add(LSubItem);
+//  end;
+//
+//  FMenuItems.FontSize := TMenuItem.Create(FMenu);
+//  FMenuItems.FontSize.Caption := 'Font size';
+//  FMenu.Items.Add(FMenuItems.FontSize);
+//  for I := 0 to 6 do
+//  begin
+//    LValue := 12 + I * 2;
+//    LSubItem := TMenuItem.Create(FMenu);
+//    LSubItem.Caption := IntToStr(LValue) + ' pt';
+//    LSubItem.Tag := LValue;
+//    LSubItem.OnClick := PopupSetFontSize;
+//    FMenuItems.FontSize.Add(LSubItem);
+//  end;
 
   PopupMenu := FMenu;
 end;
@@ -474,11 +476,6 @@ begin
     GetCurrentThreadID);
 end;
 
-procedure TAlphaWindow.OnPopup(Sender: TObject);
-begin
-  UpdatePopupItems;
-end;
-
 procedure TAlphaWindow.OnTimer(Sender: TObject);
 var
   LParentPos: TPoint;
@@ -499,52 +496,6 @@ procedure TAlphaWindow.Paint;
 begin
   inherited;
   ShowText;
-end;
-
-procedure TAlphaWindow.PopupSetTransparency(Sender: TObject);
-begin
-  Transparency := TMenuItem(Sender).Tag;
-end;
-
-procedure TAlphaWindow.PopupSetBrigtness(Sender: TObject);
-begin
-  Brightness := TMenuItem(Sender).Tag;
-end;
-
-procedure TAlphaWindow.PopupSetColorScheme(Sender: TObject);
-begin
-  ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
-end;
-
-procedure TAlphaWindow.PopupSetFontSize(Sender: TObject);
-begin
-  Canvas.Font.Size := TMenuItem(Sender).Tag;
-  Invalidate;
-end;
-
-procedure TAlphaWindow.PopupSetHeight(Sender: TObject);
-begin
-  HeightRelative := TMenuItem(Sender).Tag;
-end;
-
-procedure TAlphaWindow.PopupSetMargin(Sender: TObject);
-begin
-  Margin := TMenuItem(Sender).Tag;
-end;
-
-procedure TAlphaWindow.PopupSetPosition(Sender: TObject);
-begin
-  Position := TWindowPosition(TMenuItem(Sender).Tag);
-end;
-
-procedure TAlphaWindow.PopupSetTransparentBackground(Sender: TObject);
-begin
-  TransparentBg := not TransparentBg;
-end;
-
-procedure TAlphaWindow.PopupSetWidth(Sender: TObject);
-begin
-  WidthRelative := TMenuItem(Sender).Tag;
 end;
 
 procedure TAlphaWindow.RegisterObj;
@@ -700,37 +651,6 @@ begin
   FObjects.Remove(Self);
 end;
 
-procedure TAlphaWindow.UpdatePopupItems;
-var
-  I: Integer;
-begin
-  for I := 0 to FMenuItems.ColorScheme.Count - 1 do
-    FMenuItems.ColorScheme.Items[I].Checked := Ord(FColorScheme)
-      = FMenuItems.ColorScheme.Items[I].Tag;
-  for I := 0 to FMenuItems.Brightness.Count - 1 do
-    FMenuItems.Brightness.Items[I].Checked :=
-      FBrightness = FMenuItems.Brightness.Items[I].Tag;
-  for I := 0 to FMenuItems.Transparency.Count - 1 do
-    FMenuItems.Transparency.Items[I].Checked :=
-      FTransparency = FMenuItems.Transparency.Items[I].Tag;
-  FMenuItems.TransparentBg.Checked := TransparentBg;
-  for I := 0 to FMenuItems.Position.Count - 1 do
-    FMenuItems.Position.Items[I].Checked := Ord(FPosition)
-      = FMenuItems.Position.Items[I].Tag;
-  for I := 0 to FMenuItems.Width.Count - 1 do
-    FMenuItems.Width.Items[I].Checked :=
-      WidthRelative = FMenuItems.Width.Items[I].Tag;
-  for I := 0 to FMenuItems.Height.Count - 1 do
-    FMenuItems.Height.Items[I].Checked :=
-      HeightRelative = FMenuItems.Height.Items[I].Tag;
-  for I := 0 to FMenuItems.Margin.Count - 1 do
-    FMenuItems.Margin.Items[I].Checked :=
-      Margin = FMenuItems.Margin.Items[I].Tag;
-  for I := 0 to FMenuItems.FontSize.Count - 1 do
-    FMenuItems.FontSize.Items[I].Checked :=
-      Canvas.Font.Size = FMenuItems.FontSize.Items[I].Tag;
-end;
-
 procedure TAlphaWindow.UpdateVisible;
 begin
   Visible := IsWindowVisible(FParentControl.Handle) and Used and Enabled;
@@ -748,6 +668,152 @@ begin
   inherited;
   CalculatePosition;
   Invalidate;
+end;
+
+{ TAlphaWindow.TMenuAlphaWindow }
+
+constructor TAlphaWindow.TMenuAlphaWindow.Create(AOwner: TAlphaWindow);
+begin
+  inherited;
+
+  ColorScheme := AddItem('Color scheme', nil);
+  AddSubItems(ColorScheme, Ord(Low(TColorScheme)), Ord(High(TColorScheme)),
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I;
+      ACaption := COLORSCHEME_PARAMS[TColorScheme(I)].Name;
+    end, OnClickColorScheme);
+  ColorScheme.InsertNewLineAfter(ColorScheme.Items[3]);
+
+  Brightness := AddItem('Brightness', nil);
+  AddSubItems(Brightness, -4, 4,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I * 25;
+      ACaption := IntToStr(AValue) + '%';
+    end, OnClickBrigtness);
+
+  Transparency := AddItem('Transparency', nil);
+  AddSubItems(Transparency, 0, 3,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I * 25;
+      ACaption := IntToStr(AValue) + '%';
+    end, OnClickTransparency);
+
+  TransparentBg := AddItem('Transparent background', OnClickTransparentBg);
+
+  Position := AddItem('Position', nil);
+  AddSubItems(Position, Ord(Low(TWindowPosition)),
+    Ord(High(TWindowPosition)),
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I;
+      ACaption := WPOSITION_NAMES[TWindowPosition(I)];
+    end, OnClickPosition);
+
+  Width := AddItem('Width', nil);
+  AddSubItems(Width, 1, 4,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I * 25;
+      ACaption := IntToStr(AValue) + '%';
+    end, OnClickWidth);
+
+  Height := AddItem('Height', nil);
+  AddSubItems(Height, 1, 4,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I * 25;
+      ACaption := IntToStr(AValue) + '%';
+    end, OnClickHeight);
+
+  Margin := AddItem('Margin', nil);
+  AddSubItems(Margin, 0, 3,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := I * 5;
+      ACaption := IntToStr(AValue) + 'px';
+    end, OnClickMargin);
+
+  FontSize := AddItem('Font size', nil);
+  AddSubItems(FontSize, -4, 4,
+    procedure(I: Integer; out ACaption: string; out AValue: Integer)
+    begin
+      AValue := 12 + I * 2;
+      ACaption := IntToStr(AValue) + 'pt';
+    end, OnClickFontSize);
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickBrigtness(Sender: TObject);
+begin
+  FObj.Brightness := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickColorScheme(Sender: TObject);
+begin
+  FObj.ColorScheme := TColorScheme(TMenuItem(Sender).Tag);
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickFontSize(Sender: TObject);
+begin
+  FObj.Canvas.Font.Size := TMenuItem(Sender).Tag;
+  FObj.Invalidate;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickHeight(Sender: TObject);
+begin
+  FObj.HeightRelative := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickMargin(Sender: TObject);
+begin
+  FObj.Margin := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickPosition(Sender: TObject);
+begin
+  FObj.Position := TWindowPosition(TMenuItem(Sender).Tag);
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickTransparency(Sender: TObject);
+begin
+  FObj.Transparency := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickTransparentBg(Sender: TObject);
+begin
+  FObj.TransparentBg := not FObj.TransparentBg;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.OnClickWidth(Sender: TObject);
+begin
+  FObj.WidthRelative := TMenuItem(Sender).Tag;
+end;
+
+procedure TAlphaWindow.TMenuAlphaWindow.UpdateItems(Sender: TObject);
+var
+  I: Integer;
+begin
+  for I := 0 to ColorScheme.Count - 1 do
+    ColorScheme.Items[I].Checked := Ord(FObj.FColorScheme)
+      = ColorScheme.Items[I].Tag;
+  for I := 0 to Brightness.Count - 1 do
+    Brightness.Items[I].Checked := FObj.Brightness = Brightness.Items[I].Tag;
+  for I := 0 to Transparency.Count - 1 do
+    Transparency.Items[I].Checked :=
+      FObj.FTransparency = Transparency.Items[I].Tag;
+  TransparentBg.Checked := FObj.TransparentBg;
+  for I := 0 to Position.Count - 1 do
+    Position.Items[I].Checked := Ord(FObj.FPosition) = Position.Items[I].Tag;
+  for I := 0 to Width.Count - 1 do
+    Width.Items[I].Checked := FObj.WidthRelative = Width.Items[I].Tag;
+  for I := 0 to Height.Count - 1 do
+    Height.Items[I].Checked := FObj.HeightRelative = Height.Items[I].Tag;
+  for I := 0 to Margin.Count - 1 do
+    Margin.Items[I].Checked := FObj.Margin = Margin.Items[I].Tag;
+  for I := 0 to FontSize.Count - 1 do
+    FontSize.Items[I].Checked := FObj.Canvas.Font.Size = FontSize.Items[I].Tag;
 end;
 
 end.
