@@ -32,9 +32,7 @@ type
     pgcPages: TPageControl;
     ts1: TTabSheet;
     ts2: TTabSheet;
-    btnCapture: TButton;
     procedure appev1Idle(Sender: TObject; var Done: Boolean);
-    procedure btnCaptureClick(Sender: TObject);
     procedure btnCreateViideoWindowClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -92,11 +90,6 @@ begin
     btnPlayStop.Caption := 'Stop'
   else
     btnPlayStop.Caption := 'Play';
-end;
-
-procedure TfrmMainForm.btnCaptureClick(Sender: TObject);
-begin
-  FVideoWindow.CapturePicture;
 end;
 
 procedure TfrmMainForm.btnCreateViideoWindowClick(Sender: TObject);

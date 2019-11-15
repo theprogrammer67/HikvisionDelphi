@@ -3394,15 +3394,6 @@ object frmMainForm: TfrmMainForm
       TickStyle = tsNone
       OnChange = trckbrTransparencyChange
     end
-    object btnCapture: TButton
-      Left = 336
-      Top = 6
-      Width = 71
-      Height = 25
-      Caption = 'Capture'
-      TabOrder = 14
-      OnClick = btnCaptureClick
-    end
   end
   object pgcPages: TPageControl
     Left = 0

@@ -35,11 +35,13 @@ type
     public
       constructor Create(AOwner: TVideoWindow); override;
     public
+      Capture: TMenuItem;
       Channel: TMenuItem;
       ShowTextPanel: TMenuItem;
       PlayStop: TMenuItem;
     public
       procedure UpdateItems(Sender: TObject); override;
+      procedure OnClickCapture(Sender: TObject);
       procedure OnClickChannel(Sender: TObject);
       procedure OnClickPlayStop(Sender: TObject);
       procedure OnClickShowTextPanel(Sender: TObject);
@@ -405,6 +407,10 @@ constructor TVideoWindow.TMenuVideoWindow.Create(AOwner: TVideoWindow);
 begin
   inherited Create(AOwner);
 
+  PlayStop := AddItem('', OnClickPlayStop);
+
+  Capture := AddItem('Capture picture', OnClickCapture);
+
   Channel := AddItem('Channel', nil);
   AddSubItems(Channel, 1, 16,
     procedure(I: Integer; out ACaption: string; out AValue: Integer)
@@ -413,7 +419,6 @@ begin
       ACaption := IntToStr(I);
     end, OnClickChannel);
 
-  PlayStop := AddItem('', OnClickPlayStop);
   ShowTextPanel := AddItem('Show text panel', OnClickShowTextPanel);
 end;
 
@@ -430,6 +435,8 @@ begin
   else
     PlayStop.Caption := RsPlay;
 
+  Capture.Enabled := FObj.IsPlaying;
+
   ShowTextPanel.Checked := FObj.TextPanel.Used;
 end;
 
@@ -439,6 +446,11 @@ begin
     FObj.StopLiveVideo
   else
     FObj.PlayLiveVideo;
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.OnClickCapture(Sender: TObject);
+begin
+  FObj.CapturePicture;
 end;
 
 procedure TVideoWindow.TMenuVideoWindow.OnClickChannel(Sender: TObject);
