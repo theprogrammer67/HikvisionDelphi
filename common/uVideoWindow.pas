@@ -11,6 +11,7 @@ const
   WM_STOPVIDEO = WM_USER + 1;
   WM_CHANGESELECTED = WM_USER + 2;
   WM_MAXIMIZEWND = WM_USER + 3;
+  WM_CUSTOMEVENT = WM_USER + 4;
 
 type
   TSelfParentControl = class(TCustomControl)
@@ -36,12 +37,14 @@ type
       constructor Create(AOwner: TVideoWindow); override;
     public
       Capture: TMenuItem;
+      SendEvent: TMenuItem;
       Channel: TMenuItem;
       ShowTextPanel: TMenuItem;
       PlayStop: TMenuItem;
     public
       procedure UpdateItems(Sender: TObject); override;
       procedure OnClickCapture(Sender: TObject);
+      procedure OnSendEvent(Sender: TObject);
       procedure OnClickChannel(Sender: TObject);
       procedure OnClickPlayStop(Sender: TObject);
       procedure OnClickShowTextPanel(Sender: TObject);
@@ -408,8 +411,8 @@ begin
   inherited Create(AOwner);
 
   PlayStop := AddItem('', OnClickPlayStop);
-
   Capture := AddItem('Capture picture', OnClickCapture);
+  SendEvent := AddItem('Send event', OnSendEvent);
 
   Channel := AddItem('Channel', nil);
   AddSubItems(Channel, 1, 16,
@@ -461,6 +464,12 @@ end;
 procedure TVideoWindow.TMenuVideoWindow.OnClickShowTextPanel(Sender: TObject);
 begin
   FObj.TextPanel.Used := not FObj.TextPanel.Used;
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.OnSendEvent(Sender: TObject);
+begin
+  if Assigned(FObj.Parent) then
+    SendMessage(FObj.Parent.Handle, WM_CUSTOMEVENT, FObj.Handle, 0);
 end;
 
 end.

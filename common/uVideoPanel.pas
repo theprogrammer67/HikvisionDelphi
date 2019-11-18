@@ -9,7 +9,7 @@ uses uVideoWindow, Vcl.Controls, System.Generics.Collections, Winapi.Windows,
 type
   TPanelMode = (pmSingle, pm22, mt33, pm44);
 
-  TSelectWindow = procedure(AIndex: Integer) of object;
+  TWindowNotifyEvent = procedure(AIndex: Integer) of object;
 
   TVideoPanel = class(TSelfParentControl)
   public
@@ -32,9 +32,11 @@ type
     FParentWndHook: HHOOK;
     FVideoWindows: TObjectList<TVideoWindow>;
     FOnLoseParentWindow: TNotifyEvent;
-    FOnSelectWindow: TSelectWindow;
+    FOnSelectWindow: TWindowNotifyEvent;
+    FOnCustomEvent: TWindowNotifyEvent;
     FMaximizedWindow: TVideoWindow;
   private
+    function GetWindowIndex(AHWnd: HWND): Integer;
     procedure SetPanelMode(const Value: TPanelMode);
     procedure InstallHookParent;
     procedure UninstallHookParent;
@@ -47,6 +49,7 @@ type
     procedure SelectItem(AIndex: Integer);
     procedure MaximizeItem(AIndex: Integer);
     procedure DoSelectWindow(AIndex: Integer);
+    procedure DoCustomEvent(AIndex: Integer);
     procedure PaintBorders;
     function GetItemIndex: Integer;
     procedure SetItemIndex(const Value: Integer);
@@ -56,6 +59,7 @@ type
       message WM_LBUTTONDOWN;
     procedure WMChangeSelected(var Message: TMessage);
       message WM_CHANGESELECTED;
+    procedure WMCustomEvent(var Message: TMessage); message WM_CUSTOMEVENT;
     procedure WMMaximizeWindow(var Message: TMessage); message WM_MAXIMIZEWND;
     procedure Paint; override;
     procedure Resize; override;
@@ -77,8 +81,10 @@ type
     property UserID: Integer read FUserID write SetUserID;
     property ItemIndex: Integer read GetItemIndex write SetItemIndex;
     property SelectedWindow: TVideoWindow read GetSelectedWindow;
-    property OnSelectWindow: TSelectWindow read FOnSelectWindow
+    property OnSelectWindow: TWindowNotifyEvent read FOnSelectWindow
       write FOnSelectWindow;
+    property OnCustomEvent: TWindowNotifyEvent read FOnCustomEvent
+      write FOnCustomEvent;
   end;
 
 implementation
@@ -205,6 +211,12 @@ begin
   inherited;
 end;
 
+procedure TVideoPanel.DoCustomEvent(AIndex: Integer);
+begin
+  if Assigned(FOnCustomEvent) then
+    FOnCustomEvent(AIndex);
+end;
+
 procedure TVideoPanel.DoLoseParentWindow;
 begin
   if Assigned(OnLoseParentWindow) then
@@ -224,6 +236,16 @@ begin
   for LVideoWindow in VideoWindows do
     LVideoWindow.Used := True;
   Invalidate;
+end;
+
+function TVideoPanel.GetWindowIndex(AHWnd: HWND): Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := 0 to FVideoWindows.Count - 1 do
+    if FVideoWindows[I].Handle = AHWnd then
+      Exit(I);
 end;
 
 function TVideoPanel.GetItemIndex: Integer;
@@ -272,12 +294,9 @@ procedure TVideoPanel.MaximizeWindow(AHWnd: HWND);
 var
   I: Integer;
 begin
-  for I := 0 to FVideoWindows.Count - 1 do
-    if FVideoWindows[I].Handle = AHWnd then
-    begin
-      MaximizeItem(I);
-      Break;
-    end;
+  I := GetWindowIndex(AHWnd);
+  if I >= 0 then
+    MaximizeItem(I);
 end;
 
 procedure TVideoPanel.Paint;
@@ -398,12 +417,9 @@ procedure TVideoPanel.SelectWindow(AHWnd: HWND);
 var
   I: Integer;
 begin
-  for I := 0 to FVideoWindows.Count - 1 do
-    if FVideoWindows[I].Handle = AHWnd then
-    begin
-      SelectItem(I);
-      Break;
-    end;
+  I := GetWindowIndex(AHWnd);
+  if I >= 0 then
+    SelectItem(I);
 end;
 
 procedure TVideoPanel.SetItemIndex(const Value: Integer);
@@ -461,6 +477,15 @@ end;
 procedure TVideoPanel.WMChangeSelected(var Message: TMessage);
 begin
   SelectWindow(Message.wParam);
+end;
+
+procedure TVideoPanel.WMCustomEvent(var Message: TMessage);
+var
+  I: Integer;
+begin
+  I := GetWindowIndex(Message.wParam);
+  if I >= 0 then
+    DoCustomEvent(I);
 end;
 
 procedure TVideoPanel.WMMaximizeWindow(var Message: TMessage);
