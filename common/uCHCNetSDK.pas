@@ -75,6 +75,11 @@ type
     : Bool; stdcall;
   TNET_DVR_CapturePicture = function(lRealHandle: Longint;
     sPicFileName: PAnsiChar): Bool; stdcall;
+  TNET_DVR_MakeKeyFrame = function(lUserID: Longint; lChannel: DWORD)
+    : Bool; stdcall;
+  TNET_DVR_SaveRealData = function(lRealHandle: Longint; sFileName: PAnsiChar)
+    : Bool; stdcall;
+  TNET_DVR_StopSaveRealData = function(lRealHandle: Longint): Bool; stdcall;
 
 {$IFDEF LoadLibStatic}
 function NET_DVR_Login_V30(sDVRIP: PAnsiChar; wDVRPort: Int32;
@@ -100,6 +105,12 @@ function NET_DVR_SetCapturePictureMode(dwCaptureMode: DWORD): Bool; stdcall;
   external DLL_NAME;
 function NET_DVR_CapturePicture(lRealHandle: Longint; sPicFileName: PAnsiChar)
   : Bool; stdcall; external DLL_NAME;
+function NET_DVR_MakeKeyFrame(lUserID: Longint; lChannel: DWORD): Bool; stdcall;
+  external DLL_NAME;
+function NET_DVR_SaveRealData(lRealHandle: Longint; sFileName: PAnsiChar): Bool;
+  stdcall; external DLL_NAME;
+function NET_DVR_StopSaveRealData(lRealHandle: Longint): Bool; stdcall;
+  external DLL_NAME;
 {$ELSE}
 
 var
@@ -115,6 +126,9 @@ var
   NET_DVR_GetPlayBackPlayerIndex: TNET_DVR_GetPlayBackPlayerIndex;
   NET_DVR_SetCapturePictureMode: TNET_DVR_SetCapturePictureMode;
   NET_DVR_CapturePicture: TNET_DVR_CapturePicture;
+  NET_DVR_MakeKeyFrame: TNET_DVR_MakeKeyFrame;
+  NET_DVR_SaveRealData: TNET_DVR_SaveRealData;
+  NET_DVR_StopSaveRealData: TNET_DVR_StopSaveRealData;
 
 procedure LoadLib(out ALibHandle: THandle; const LibDirectory: string);
 procedure FreeLib(var ALibHandle: THandle);
@@ -164,6 +178,9 @@ begin
       @NET_DVR_SetCapturePictureMode :=
         GetModuleSymbol('NET_DVR_SetCapturePictureMode');
       @NET_DVR_CapturePicture := GetModuleSymbol('NET_DVR_CapturePicture');
+      @NET_DVR_MakeKeyFrame := GetModuleSymbol('NET_DVR_MakeKeyFrame');
+      @NET_DVR_SaveRealData := GetModuleSymbol('NET_DVR_SaveRealData');
+      @NET_DVR_StopSaveRealData := GetModuleSymbol('NET_DVR_StopSaveRealData');
     except
       FreeLib(ALibHandle);
       raise;

@@ -41,6 +41,7 @@ type
       Channel: TMenuItem;
       ShowTextPanel: TMenuItem;
       PlayStop: TMenuItem;
+      StartStopRecord: TMenuItem;
     public
       procedure UpdateItems(Sender: TObject); override;
       procedure OnClickCapture(Sender: TObject);
@@ -48,6 +49,7 @@ type
       procedure OnClickChannel(Sender: TObject);
       procedure OnClickPlayStop(Sender: TObject);
       procedure OnClickShowTextPanel(Sender: TObject);
+      procedure OnClickStartStopRecord(Sender: TObject);
     end;
   public const
     STATUS_FONTSIZE = 12;
@@ -70,6 +72,7 @@ type
     FTextPanel: TAlphaWindow;
     FMenu: TMenuVideoWindow;
     FCaptureDir: string;
+    FRecord: Boolean;
   private // Обработка сообщений
     procedure WMPlayVideo(var Message: TMessage); message WM_PLAYVIDEO;
     procedure WMStopVideo(var Message: TMessage); message WM_STOPVIDEO;
@@ -93,6 +96,8 @@ type
     procedure PlayLiveVideo;
     procedure StopLiveVideo;
     procedure CapturePicture;
+    procedure StartSaveRealData;
+    procedure StopSaveRealData;
   public // Конструкторы/Деструкторы
     constructor Create(AParent: TWinControl); reintroduce;
     destructor Destroy; override;
@@ -120,6 +125,8 @@ uses System.Types;
 resourcestring
   RsPlay = 'Play';
   RsStop = 'Stop';
+  RsStopRecord = 'Stop record';
+  RsStartRecord = 'Start record';
   RsErrCaptureDirectory = 'Capture directory is not specified';
 
   { TWideoWindow }
@@ -173,6 +180,7 @@ end;
 
 destructor TVideoWindow.Destroy;
 begin
+  StopSaveRealData;
   StopLiveVideo;
   FreeAndNil(FMenu);
   FreeAndNil(FTextPanel);
@@ -316,6 +324,25 @@ begin
     RaiseLastHVError;
 end;
 
+procedure TVideoWindow.StartSaveRealData;
+var
+  LFileName: string;
+begin
+  StopSaveRealData;
+  if FCaptureDir = '' then
+    raise Exception.Create(RsErrCaptureDirectory);
+
+  LFileName := Format('%s%s_%s.mp4', [IncludeTrailingPathDelimiter(FCaptureDir),
+    'Video', FormatDateTime('yyyy.mm.dd_hh.mm.ss', Now)]) + #0;
+  if not NET_DVR_MakeKeyFrame(FUserID, FChannel) then
+    RaiseLastHVError;
+
+  FRecord := NET_DVR_SaveRealData(FRealHandle,
+    PAnsiChar(AnsiString(LFileName)));
+  if not FRecord then
+    RaiseLastHVError;
+end;
+
 procedure TVideoWindow.SetChannel(const Value: Integer);
 begin
   FChannel := Value;
@@ -341,6 +368,13 @@ begin
   FRealHandle := -1;
   FPlayHandle := -1;
   Invalidate;
+end;
+
+procedure TVideoWindow.StopSaveRealData;
+begin
+  if not FRecord then
+    Exit;
+  NET_DVR_StopSaveRealData(FRealHandle);
 end;
 
 { TSelfParentControl }
@@ -412,7 +446,10 @@ begin
 
   PlayStop := AddItem('', OnClickPlayStop);
   Capture := AddItem('Capture picture', OnClickCapture);
+  StartStopRecord := AddItem('', OnClickStartStopRecord);
   SendEvent := AddItem('Send event', OnSendEvent);
+
+  Items.Add(NewLine);
 
   Channel := AddItem('Channel', nil);
   AddSubItems(Channel, 1, 16,
@@ -437,6 +474,11 @@ begin
     PlayStop.Caption := RsStop
   else
     PlayStop.Caption := RsPlay;
+
+  if FObj.FRecord then
+    StartStopRecord.Caption := RsStopRecord
+  else
+    StartStopRecord.Caption := RsStartRecord;
 
   Capture.Enabled := FObj.IsPlaying;
 
@@ -464,6 +506,14 @@ end;
 procedure TVideoWindow.TMenuVideoWindow.OnClickShowTextPanel(Sender: TObject);
 begin
   FObj.TextPanel.Used := not FObj.TextPanel.Used;
+end;
+
+procedure TVideoWindow.TMenuVideoWindow.OnClickStartStopRecord(Sender: TObject);
+begin
+  if FObj.FRecord then
+    FObj.StopSaveRealData
+  else
+    FObj.StartSaveRealData;
 end;
 
 procedure TVideoWindow.TMenuVideoWindow.OnSendEvent(Sender: TObject);

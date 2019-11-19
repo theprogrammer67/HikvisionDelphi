@@ -19,6 +19,7 @@ type
     DefFontSize: Integer;
     DefFontName: string;
     DefFontColor: TColor;
+    DefCaptureDir: string;
   public const
     WIN_COUNT: Byte = 16;
   private const
@@ -176,6 +177,7 @@ begin
     LVideoWindow := TVideoWindow.Create(Self);
     FVideoWindows.Add(LVideoWindow);
     LVideoWindow.Channel := I + 1;
+    LVideoWindow.CaptureDir := DefCaptureDir;
   end;
 
   UserID := -1;
@@ -201,6 +203,7 @@ begin
   DefFontSize := DEF_FONTSIZE;
   DefFontName := DEF_FONTNAME;
   DefFontColor := DEF_FONTCOLOR;
+  DefCaptureDir := '';
 end;
 
 destructor TVideoPanel.Destroy;
