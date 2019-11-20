@@ -3257,7 +3257,7 @@ object frmMainForm: TfrmMainForm
       EditLabel.Height = 16
       EditLabel.Caption = 'Address'
       TabOrder = 1
-      Text = '172.20.162.43'
+      Text = '195.19.25.68'
     end
     object lbledtPort: TLabeledEdit
       Left = 191

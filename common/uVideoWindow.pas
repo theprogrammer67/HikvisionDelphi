@@ -375,6 +375,7 @@ begin
   if not FRecord then
     Exit;
   NET_DVR_StopSaveRealData(FRealHandle);
+  FRecord := False;
 end;
 
 { TSelfParentControl }
