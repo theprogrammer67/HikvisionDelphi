@@ -8,7 +8,9 @@ uses
   uVideoPanel in '..\..\common\uVideoPanel.pas',
   uVideoWindow in '..\..\common\uVideoWindow.pas',
   uVideoDevice in '..\..\common\uVideoDevice.pas',
-  uCommonUtils in '..\..\..\cf\uCommonUtils.pas';
+  uAlphaWindow in '..\..\common\uAlphaWindow.pas',
+  uCommonTypes in '..\..\common\uCommonTypes.pas',
+  uCommonUtils in '..\..\common\uCommonUtils.pas';
 
 {$R *.res}
 
